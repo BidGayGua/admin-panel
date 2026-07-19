@@ -4,3 +4,5 @@ node_modules
 import_excel.js
 supabase_schema.sql
 .DS_Store
+check_db.js
+read_excel.js
