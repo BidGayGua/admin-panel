@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaizen Admin</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo" onclick="event.stopPropagation()">
+    <div class="logo-icon">K</div>
+    <div>
+      <div class="logo-text">Admin</div>
+      <div class="logo-sub">Панель управления</div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Меню</div>
+
+    <div class="nav-item active" data-page="kanban-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="14" y="10" width="7" height="11" rx="1"/><rect x="3" y="13" width="7" height="8" rx="1"/></svg>
+      Канбан-доска
+      <span class="badge" id="kanbanBadge">0</span>
+    </div>
+    <div class="nav-item" data-page="calendar-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Календарь
+    </div>
+    <div class="nav-item" data-page="finance-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Финансы
+    </div>
+    <div class="nav-item" data-page="clients-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Клиенты
+    </div>
+    <div class="nav-item" data-page="materials-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      Склад
+    </div>
+    <div class="nav-item" data-page="templates-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+      Шаблоны
+    </div>
+    <div class="nav-item" data-page="archive-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      Корзина
+      <span class="badge" id="trashBadge">0</span>
+    </div>
+    <div class="nav-item" data-page="history-page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      История
+    </div>
+  </div>
+  <div class="sidebar-section directions-section">
+    <div class="sidebar-section-title">Направления</div>
+    <div class="direction-toggle on" data-dir="tipografia"><span class="dot" style="background:var(--green)"></span>Типография<div class="toggle-switch"></div></div>
+    <div class="direction-toggle on" data-dir="promotion"><span class="dot" style="background:var(--blue)"></span>Промоушен<div class="toggle-switch"></div></div>
+    <div class="direction-toggle on" data-dir="repair"><span class="dot" style="background:var(--yellow)"></span>Ремонт / Заправка<div class="toggle-switch"></div></div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card" onclick="event.stopPropagation()">
+      <div class="user-avatar">AK</div>
+      <div class="user-info">
+        <div class="user-name">Валерий</div>
+        <div class="user-role">Владелец</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Канбан-доска</div>
+        <div class="topbar-subtitle" id="topbarSubtitle">Управление заказами всех направлений</div>
+      </div>
+    </div>
+    <div class="topbar-center" id="topbarCenter">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Поиск заказов..." id="searchInput" oninput="filterCards()">
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-bell" id="notifBell" onclick="toggleNotifications(event)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-count" id="notifCount">3</span>
+        <div class="notif-dropdown" id="notifDropdown">
+          <div class="notif-dropdown-header">
+            <span class="notif-dropdown-title">Уведомления</span>
+            <button class="notif-dropdown-clear" onclick="event.stopPropagation();clearNotifications()">Очистить</button>
+          </div>
+          <div class="notif-list" id="notifList"></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="addOrderBtn" onclick="openOrderModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Добавить заказ
+      </button>
+      <button class="btn btn-ghost" onclick="exportExcel()" title="Экспорт в Excel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 15 21 20 3 20 3 15"/><line x1="12" y1="3" x2="12" y2="15"/><polyline points="9 10 12 7 15 10"/></svg>
+        Экспорт
+      </button>
+      <button class="btn btn-ghost" onclick="document.getElementById('excelInput').click()" title="Импорт Excel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 15 21 20 3 20 3 15"/><line x1="12" y1="3" x2="12" y2="15"/><polyline points="9 10 12 7 15 10"/></svg>
+        Импорт
+      </button>
+      <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
+    </div>
+  </div>
+
+  <!-- KANBAN -->
+  <div id="kanban-page" class="page-container active">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-icon accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="stat-value" id="statActive">0</div><div class="stat-label">Активных заказов</div></div></div>
+      <div class="stat-card"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="stat-value" id="statCompleted">0</div><div class="stat-label">Выполнено в этом месяце</div></div></div>
+      <div class="stat-card"><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div><div class="stat-value" id="statRevenue">0 ₸</div><div class="stat-label">Выручка за месяц</div></div></div>
+      <div class="stat-card"><div class="stat-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div><div class="stat-value" id="statOverdue">0</div><div class="stat-label">Просроченных</div></div></div>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <select class="form-select" id="filterDirection" onchange="renderKanban()">
+        <option value="all">Все направления</option>
+        <option value="tipografia">Типография</option>
+        <option value="promotion">Промоушен</option>
+        <option value="repair">Ремонт</option>
+      </select>
+      <select class="form-select" id="filterPayment" onchange="renderKanban()">
+        <option value="all">Любая оплата</option>
+        <option value="paid">Оплачено</option>
+        <option value="unpaid">Не оплачено</option>
+        <option value="partial">Частично</option>
+      </select>
+      <select class="form-select" id="filterYear" onchange="renderKanban()">
+        <option value="all">Все года</option>
+      </select>
+      <input class="form-input" type="date" id="filterDateFrom" onchange="renderKanban()" placeholder="От">
+      <input class="form-input" type="date" id="filterDateTo" onchange="renderKanban()" placeholder="До">
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Сброс</button>
+      <span class="filter-count" id="filterCount">Все заказы</span>
+    </div>
+    <div class="kanban-wrapper">
+      <div class="kanban" id="kanbanBoard"></div>
+    </div>
+  </div>
+
+  <!-- Batch bar -->
+  <div class="batch-bar" id="batchBar">
+    <div class="batch-count">Выбрано: <span id="batchCount">0</span></div>
+    <button class="btn btn-sm btn-ghost" onclick="batchStatus('paid')">Оплачено</button>
+    <button class="btn btn-sm btn-ghost" onclick="batchStatus('unpaid')">Не оплачено</button>
+    <button class="btn btn-sm btn-ghost" onclick="batchMove('inprogress')">В работу</button>
+    <button class="btn btn-sm btn-ghost" onclick="batchMove('done')">Готово</button>
+    <button class="btn btn-sm btn-danger" onclick="batchTrash()">В корзину</button>
+    <button class="btn btn-sm btn-ghost" onclick="clearSelection()">Снять</button>
+  </div>
+
+  <!-- CALENDAR -->
+  <div id="calendar-page" class="page-container">
+    <div class="calendar-wrapper">
+      <div class="calendar">
+        <div class="cal-header">
+          <div class="cal-header-left">
+            <div class="cal-month-title" id="calMonthTitle">Июль 2026</div>
+            <div class="cal-nav"><button class="cal-nav-btn" id="calPrevBtn">&lsaquo;</button><button class="cal-nav-btn" id="calNextBtn">&rsaquo;</button></div>
+            <button class="cal-today-btn" id="calTodayBtn">Сегодня</button>
+          </div>
+          <div class="cal-header-right">
+            <button class="cal-view-btn active" data-view="month">Месяц</button>
+            <button class="cal-view-btn" data-view="week">Неделя</button>
+          </div>
+        </div>
+        <div class="cal-weekdays">
+          <div class="cal-weekday">Пн</div><div class="cal-weekday">Вт</div><div class="cal-weekday">Ср</div><div class="cal-weekday">Чт</div><div class="cal-weekday">Пт</div><div class="cal-weekday weekend">Сб</div><div class="cal-weekday weekend">Вс</div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCE -->
+  <div id="finance-page" class="page-container"><div class="page-scroll">
+    <div class="filter-bar">
+      <select class="form-select" id="finDirection" onchange="renderFinance()">
+        <option value="all">Все направления</option>
+        <option value="tipografia">Типография</option>
+        <option value="promotion">Промоушен</option>
+        <option value="repair">Ремонт</option>
+      </select>
+      <select class="form-select" id="finYear" onchange="renderFinance()">
+        <option value="all">Все года</option>
+      </select>
+      <select class="form-select" id="finMonth" onchange="renderFinance()">
+        <option value="all">Все месяцы</option>
+        <option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option>
+        <option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option>
+        <option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option>
+        <option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option>
+      </select>
+    </div>
+    <div class="finance-stats-row">
+      <div class="fin-stat"><div class="fin-stat-label">Выручка</div><div class="fin-stat-value green">0 ₸</div><div class="fin-stat-change up" id="finRevPeriod">за выбранный период</div></div>
+      <div class="fin-stat"><div class="fin-stat-label">Расходы</div><div class="fin-stat-value red">0 ₸</div><div class="fin-stat-change up" id="finExpPeriod">за выбранный период</div></div>
+      <div class="fin-stat"><div class="fin-stat-label">Прибыль</div><div class="fin-stat-value blue">0 ₸</div><div class="fin-stat-change up" id="finProfitPeriod">за выбранный период</div></div>
+      <div class="fin-stat"><div class="fin-stat-label">Долги клиентов</div><div class="fin-stat-value yellow">0 ₸</div><div class="fin-stat-change down" id="finDebtPeriod">за выбранный период</div></div>
+    </div>
+    <div class="finance-grid">
+      <div class="finance-card full"><div class="finance-card-header"><span class="finance-card-title">Динамика выручки</span><span class="finance-card-sub" id="finRevSubtitle">по месяцам</span></div><div class="chart-wrap tall"><canvas id="revenueChart"></canvas></div></div>
+      <div class="finance-card"><div class="finance-card-header"><span class="finance-card-title">P&amp;L по направлениям</span><span class="finance-card-sub" id="finPnlSubtitle">за период</span></div><div class="chart-wrap"><canvas id="pnlChart"></canvas></div></div>
+      <div class="finance-card"><div class="finance-card-header"><span class="finance-card-title">Выручка по направлениям</span><span class="finance-card-sub" id="finDirSubtitle">доля</span></div><div class="chart-wrap"><canvas id="directionChart"></canvas></div></div>
+    </div>
+  </div></div>
+
+  <!-- CLIENTS -->
+  <div id="clients-page" class="page-container"><div class="page-scroll">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div><div class="topbar-title" style="font-size:18px">Клиенты</div><div class="topbar-subtitle">История заказов и задолженности</div></div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="form-input" placeholder="Поиск клиента..." id="clientSearch" oninput="renderClients()" style="padding:6px 10px;font-size:13px;background:var(--bg4);border:1px solid var(--border);color:var(--text);border-radius:6px">
+        <select class="form-select" id="clientDirFilter" onchange="renderClients()" style="padding:6px 10px;font-size:13px;background:var(--bg4);border:1px solid var(--border);color:var(--text);border-radius:6px">
+          <option value="all">Все направления</option>
+          <option value="tipografia">Типография</option>
+          <option value="promotion">Промоушен</option>
+          <option value="repair">Ремонт</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" id="clientViewToggle" onclick="toggleClientView()" style="font-size:12px">Таблица</button>
+      </div>
+    </div>
+    <div class="clients-grid" id="clientsGrid"></div>
+    <table class="materials-table" id="clientsTable" style="display:none"><thead><tr><th>Клиент</th><th>Телефон</th><th>Направление</th><th>Заказов</th><th>Сумма</th><th>Выполнено</th><th>Долг</th></tr></thead><tbody id="clientsTableBody"></tbody></table>
+  </div></div>
+
+  <!-- MATERIALS -->
+  <div id="materials-page" class="page-container"><div class="materials-wrapper">
+    <div class="materials-container">
+      <div class="materials-header"><div class="materials-title">Склад материалов</div><div class="materials-action">
+        <button class="btn btn-primary btn-sm" onclick="openMaterialModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Добавить</button>
+      </div></div>
+      <div class="materials-stats">
+        <div class="mat-stat"><div><div class="mat-stat-value green">48</div><div class="mat-stat-label">Позиций всего</div></div></div>
+        <div class="mat-stat"><div><div class="mat-stat-value" style="color:var(--green)">36</div><div class="mat-stat-label">В норме</div></div></div>
+        <div class="mat-stat"><div><div class="mat-stat-value" style="color:var(--yellow)">9</div><div class="mat-stat-label">Заканчиваются</div></div></div>
+        <div class="mat-stat"><div><div class="mat-stat-value" style="color:var(--danger)">3</div><div class="mat-stat-label">Критический минимум</div></div></div>
+      </div>
+      <div class="materials-table-wrap"><table class="materials-table"><thead><tr><th>Материал</th><th>Направление</th><th>В наличии</th><th>Мин. уровень</th><th>Статус</th><th>Цена закупки</th><th></th></tr></thead><tbody id="materialsBody"></tbody></table></div>
+    </div>
+  </div></div>
+
+  <!-- TEMPLATES -->
+  <div id="templates-page" class="page-container"><div class="page-scroll">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div><div class="topbar-title" style="font-size:18px">Шаблоны заказов</div><div class="topbar-subtitle">Быстрое создание заказов по готовым шаблонам</div></div>
+      <button class="btn btn-primary" onclick="openTemplateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Создать шаблон</button>
+    </div>
+    <div class="tpl-grid" id="tplGrid"></div>
+  </div></div>
+
+  <!-- ARCHIVE -->
+  <div id="archive-page" class="page-container"><div class="materials-wrapper">
+    <div class="materials-container">
+      <div class="materials-header"><div class="materials-title">Корзина</div><div class="materials-action"><span style="font-size:13px;color:var(--text-muted)">Удалённые заказы можно восстановить</span></div></div>
+      <div class="archive-table-wrap">
+        <table class="archive-table"><thead><tr><th>ID</th><th>Клиент</th><th>Заказ</th><th>Сумма</th><th>Направление</th><th>Удалён</th><th></th></tr></thead><tbody id="archiveBody"></tbody></table>
+        <div class="archive-empty" id="archiveEmpty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg><br>Корзина пуста</div>
+      </div>
+    </div>
+  </div></div>
+
+  <!-- HISTORY -->
+  <div id="history-page" class="page-container"><div class="page-scroll">
+    <div style="margin-bottom:20px"><div class="topbar-title" style="font-size:18px;margin-bottom:4px">История изменений</div><div class="topbar-subtitle">Все действия с заказами и шаблонами</div></div>
+    <div class="history-list" id="historyList"></div>
+  </div></div>
+
+</div>
+
+<!-- Order Modal -->
+<div class="modal-overlay" id="orderModal" onclick="if(event.target===this)closeOrderModal()">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="orderModalTitle">Новый заказ</span><button class="modal-close" onclick="closeOrderModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Клиент</label><input class="form-input" placeholder="Имя или название" id="fClient"></div>
+        <div class="form-group"><label class="form-label">Телефон</label><input class="form-input" placeholder="+7 777 000 00 00" id="fPhone"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Что за заказ</label><textarea class="form-textarea" placeholder="Подробно опишите что нужно сделать: тираж, материал, сроки, особенности" id="fDesc" style="min-height:80px"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Направление</label><select class="form-select" id="fDirection"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт / Заправка</option></select></div>
+        <div class="form-group"><label class="form-label">Сумма (₸)</label><input class="form-input" placeholder="0" id="fAmount"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Статус оплаты</label><select class="form-select" id="fPayStatus"><option value="unpaid">Не оплачено</option><option value="paid">Оплачено</option><option value="partial">Частично</option></select></div>
+        <div class="form-group"><label class="form-label">Столбец</label><select class="form-select" id="fColumn"><option value="incoming">Входящие</option><option value="inprogress">В работе</option><option value="done">Готово</option><option value="completed">Выполнено</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label class="form-label" style="font-size:12px;opacity:.7">Шаблон (быстрое заполнение)</label>
+          <select class="form-select" id="fTemplate" onchange="applyTemplate()" style="font-size:12px"><option value="">— Без шаблона —</option></select>
+        </div>
+      </div>
+      <input type="hidden" id="fEditId">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeOrderModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveOrder()" id="orderModalSaveBtn">Создать заказ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeDetailModal()">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <span class="modal-title" id="detailModalTitle">Заказ #0</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="openOrderModal(window._detailOrderId);closeDetailModal()">Редактировать</button>
+        <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <div class="detail-section">
+          <div class="detail-field"><span class="detail-label">Клиент</span><span class="detail-value" id="detailClient">—</span></div>
+          <div class="detail-field"><span class="detail-label">Телефон</span><span class="detail-value" id="detailPhone">—</span></div>
+          <div class="detail-field"><span class="detail-label">Направление</span><span class="detail-value" id="detailDirection">—</span></div>
+          <div class="detail-field"><span class="detail-label">Сумма</span><span class="detail-value" id="detailAmount">—</span></div>
+          <div class="detail-field"><span class="detail-label">Оплата</span><span class="detail-value" id="detailPayment">—</span></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-field"><span class="detail-label">Статус</span><span class="detail-value" id="detailStatus">—</span></div>
+          <div class="detail-field"><span class="detail-label">Дата</span><span class="detail-value" id="detailDate">—</span></div>
+          <div class="detail-field"><span class="detail-label">Срок</span><span class="detail-value" id="detailDeadline">—</span></div>
+          <div class="detail-field"><span class="detail-label">Доставка</span><span class="detail-value" id="detailDelivery">—</span></div>
+          <div class="detail-field"><span class="detail-label">Материалы</span><span class="detail-value" id="detailMaterials">—</span></div>
+        </div>
+      </div>
+      <div class="detail-section" style="margin-top:16px">
+        <div class="detail-label" style="margin-bottom:6px">Описание</div>
+        <div class="detail-desc" id="detailDesc">—</div>
+      </div>
+      <div class="detail-section" style="margin-top:16px">
+        <div class="detail-label" style="margin-bottom:6px">История изменений</div>
+        <div class="detail-history" id="detailHistory"><em>Загрузка...</em></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeDetailModal()">Закрыть</button>
+      <button class="btn btn-primary" onclick="openOrderModal(window._detailOrderId);closeDetailModal()">Редактировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Template Modal -->
+<div class="modal-overlay" id="templateModal" onclick="if(event.target===this)closeTemplateModal()">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="tplModalTitle">Новый шаблон</span><button class="modal-close" onclick="closeTemplateModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Название шаблона</label><input class="form-input" placeholder="Например: Визитки 1000 шт" id="tplName"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Направление</label><select class="form-select" id="tplDirection"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт / Заправка</option></select></div>
+        <div class="form-group"><label class="form-label">Стандартная сумма (₸)</label><input class="form-input" placeholder="0" id="tplAmount"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Описание заказа</label><textarea class="form-textarea" placeholder="Что обычно входит в заказ" id="tplDesc"></textarea></div>
+      <input type="hidden" id="tplEditId">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTemplateModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveTemplate()">Сохранить шаблон</button>
+    </div>
+  </div>
+</div>
+
+<!-- Material Modal -->
+<div class="modal-overlay" id="materialModal" onclick="if(event.target===this)closeMaterialModal()">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="matModalTitle">Новый материал</span><button class="modal-close" onclick="closeMaterialModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Название</label><input class="form-input" placeholder="Наименование материала" id="matName"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Направление</label><select class="form-select" id="matDirection"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select></div>
+        <div class="form-group"><label class="form-label">Единица</label><input class="form-input" placeholder="шт, пачка, м²" id="matUnit"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Количество</label><input class="form-input" placeholder="0" id="matQty"></div>
+        <div class="form-group"><label class="form-label">Мин. уровень</label><input class="form-input" placeholder="0" id="matMin"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Цена закупки (₸)</label><input class="form-input" placeholder="0" id="matPrice"></div>
+      <input type="hidden" id="matEditId">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMaterialModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveMaterial()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Movement Modal (Приход/Расход) -->
+<div class="modal-overlay" id="movementModal" onclick="if(event.target===this)closeMovementModal()">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="movModalTitle">Приход материала</span><button class="modal-close" onclick="closeMovementModal()">&times;</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Материал</label><div id="movMaterialName" style="font-weight:600;font-size:14px;padding:6px 0"></div></div>
+      <div class="form-group"><label class="form-label">Количество</label><input class="form-input" placeholder="0" id="movQty" type="number"></div>
+      <input type="hidden" id="movMaterialId">
+      <input type="hidden" id="movType">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeMovementModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveMovement()">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
