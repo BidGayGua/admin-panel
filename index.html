@@ -281,7 +281,7 @@ tr:hover td{background:var(--bg4)}
       <div class="fg"><label class="fl">Описание заказа</label><textarea class="ft" id="fDesc"></textarea></div>
       <div class="fr">
         <div class="fg"><label class="fl">Направление</label>
-          <select class="fs" id="fDir"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт / Заправка картриджей</option></select>
+          <select class="fs" id="fModalDir"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт / Заправка картриджей</option></select>
         </div>
         <div class="fg"><label class="fl">Шаблон</label>
           <select class="fs" id="fTpl" onchange="applyTemplate()"><option value="">— Без шаблона —</option></select>
@@ -290,7 +290,7 @@ tr:hover td{background:var(--bg4)}
       <div class="fr">
         <div class="fg"><label class="fl">Тираж / Количество</label><input class="fi" type="number" value="1" id="fQty" oninput="recalc()"></div>
         <div class="fg"><label class="fl">Тип оплаты</label>
-          <select class="fs" id="fPayType"><option value="nal">Наличные</option><option value="kaspi">Каспи / Перевод</option><option value="beznal">Безнал / Расчётный счёт</option></select>
+          <select class="fs" id="fModalPayType"><option value="nal">Наличные</option><option value="kaspi">Каспи / Перевод</option><option value="beznal">Безнал / Расчётный счёт</option></select>
         </div>
       </div>
       <div id="calcSection" style="display:none;margin-top:8px">
@@ -314,7 +314,7 @@ tr:hover td{background:var(--bg4)}
         </div>
         <div class="fr">
           <div class="fg"><label class="fl">Статус оплаты</label>
-            <select class="fs" id="fPay"><option value="unpaid">Не оплачено</option><option value="paid">Оплачено</option><option value="partial">Частично</option></select>
+            <select class="fs" id="fModalPay"><option value="unpaid">Не оплачено</option><option value="paid">Оплачено</option><option value="partial">Частично</option></select>
           </div>
           <div class="fg"><label class="fl">Статус выполнения</label>
             <select class="fs" id="fCol"><option value="incoming">Входящие</option><option value="inprogress">В работе</option><option value="done">Готово</option><option value="completed">Выполнено</option></select>
@@ -531,31 +531,31 @@ async function renderOrders(){
   let f=allOrders;
   if(dir!='all')f=f.filter(o=>o.direction===dir);
   if(pay!='all')f=f.filter(o=>o.payment_status===pay);
-  if(payT!='all')f=f.filter(o=>(o.payment_method||'nal')===payT);
+  if(payT!='all')f=f.filter(o=>o.payment_method===payT);
   if(yr!='all')f=f.filter(o=>o.date&&o.date.startsWith(yr));
   if(df)f=f.filter(o=>o.date&&o.date>=df);
   if(dt)f=f.filter(o=>o.date&&o.date<=dt);
   if(sq)f=f.filter(o=>(o.client||'').toLowerCase().includes(sq)||(o.description||'').toLowerCase().includes(sq));
-  document.getElementById('filterCount').textContent='Показано: '+f.length;
-  const rev=f.reduce((s,o)=>s+Number(o.total_amount||0),0);
-  const cost=f.reduce((s,o)=>s+Number(o.material_cost||0)+Number(o.delivery_cost||0),0);
-  const profit=rev-cost;
-  const margin=rev>0?profit/rev*100:0;
-  document.getElementById('mRevenue').textContent=fm(rev);
-  document.getElementById('mCost').textContent=fm(cost);
-  const mp=document.getElementById('mProfit');mp.textContent=fm(profit);mp.style.color=profit>=0?'var(--green)':'var(--danger)';
-  const mm=document.getElementById('mMargin');mm.textContent=margin.toFixed(1)+'%';mm.style.color=profit>=0?'var(--green)':'var(--danger)';
+  document.getElementById('filterCount').textContent='Показано: '+f.length+' / Всего: '+allOrders.length;
+  const aRev=allOrders.reduce((s,o)=>s+Number(o.total_amount||0),0);
+  const aCost=allOrders.reduce((s,o)=>s+Number(o.material_cost||0)+Number(o.delivery_cost||0),0);
+  const aProfit=aRev-aCost;
+  const aMargin=aRev>0?aProfit/aRev*100:0;
+  document.getElementById('mRevenue').textContent=fm(aRev);
+  document.getElementById('mCost').textContent=fm(aCost);
+  const mp=document.getElementById('mProfit');mp.textContent=fm(aProfit);mp.style.color=aProfit>=0?'var(--green)':'var(--danger)';
+  const mm=document.getElementById('mMargin');mm.textContent=aMargin.toFixed(1)+'%';mm.style.color=aProfit>=0?'var(--green)':'var(--danger)';
   const b=document.getElementById('ordersBody');
   b.innerHTML=f.map(o=>{
     const cst=Number(o.material_cost||0)+Number(o.delivery_cost||0);
     const pr=Number(o.total_amount||0)-cst;
     const ov=o.deadline&&new Date(o.deadline)<new Date()&&!['completed','done','canceled'].includes(o.status);
-    const pm=o.payment_method||'nal';
+    const pm=o.payment_method;
     return `<tr>
       <td style="white-space:nowrap"><span style="font-weight:600;color:var(--text)">#${o.id}</span><br><span style="font-size:11px;color:var(--text-dim)">${fd(o.date)}</span></td>
       <td><div class="cl-name" onclick="openDetail(${o.id})">${esc(o.client)}</div><div class="cl-phone">${o.phone||''}</div></td>
       <td><span class="badge badge-${o.direction}">${dl(o.direction)}</span></td>
-      <td><span style="font-size:11px;color:var(--text-dim)">${pt(pm)}</span></td>
+      <td><span style="font-size:11px;color:var(--text-dim)">${pm?pt(pm):'—'}</span></td>
       <td><span class="badge badge-${o.payment_status}">${ps(o.payment_status)}</span></td>
       <td style="font-weight:600;color:var(--text)">${fm(o.total_amount)}</td>
       <td>${fm(cst)}</td>
@@ -764,9 +764,9 @@ async function openOrderModal(id){
   document.getElementById('calcSection').style.display='none';
   ['fPhone','fCompany','fAmount','fDelivery','fCostManual','fMatData'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fDesc').value='';
-  document.getElementById('fDir').value='tipografia';
-  document.getElementById('fPay').value='unpaid';
-  document.getElementById('fPayType').value='nal';
+  document.getElementById('fModalDir').value='tipografia';
+  document.getElementById('fModalPay').value='unpaid';
+  document.getElementById('fModalPayType').value='nal';
   document.getElementById('fCol').value='incoming';
   document.getElementById('fDeadline').value='';
   document.getElementById('fQty').value=1;
@@ -791,12 +791,12 @@ async function openOrderModal(id){
       document.getElementById('fClientNew').value=o.client;
       document.getElementById('fPhone').value=o.phone||'';
       document.getElementById('fDesc').value=o.description||'';
-      document.getElementById('fDir').value=o.direction;
+      document.getElementById('fModalDir').value=o.direction;
       document.getElementById('fAmount').value=o.total_amount;
       document.getElementById('fDelivery').value=o.delivery_cost||'';
       document.getElementById('fCostManual').value=(Number(o.material_cost||0)+Number(o.delivery_cost||0))||'';
-      document.getElementById('fPay').value=o.payment_status;
-      document.getElementById('fPayType').value=o.payment_method||'nal';
+      document.getElementById('fModalPay').value=o.payment_status;
+      document.getElementById('fModalPayType').value=o.payment_method||'nal';
       document.getElementById('fCol').value=o.status;
       document.getElementById('fDeadline').value=o.deadline||'';
       // Find client in dropdown
@@ -816,7 +816,7 @@ function onClientSelect(){
   document.getElementById('fClientNew').value=c.name;
   document.getElementById('fPhone').value=c.phone||'';
   document.getElementById('fCompany').value=c.email||'';
-  if(c.city&&PAY_TP[c.city])document.getElementById('fPayType').value=c.city;
+  if(c.city&&PAY_TP[c.city])document.getElementById('fModalPayType').value=c.city;
 }
 
 async function applyTemplate(){
@@ -828,7 +828,7 @@ async function applyTemplate(){
   if(!tpl)return;
   const unitCost=Number(tpl.unit_cost||0);
   const unitPrice=Number(tpl.unit_price||tpl.amount||0);
-  document.getElementById('fDir').value=tpl.direction;
+  document.getElementById('fModalDir').value=tpl.direction;
   document.getElementById('calcResult').innerHTML=
     `Шаблон: <strong>${esc(tpl.name)}</strong> — Себестоимость 1 шт: <strong>${fm(unitCost)}</strong>, Цена 1 шт: <strong>${fm(unitPrice)}</strong>`;
   recalc();
@@ -876,10 +876,10 @@ async function saveOrder(){
   const data={
     client,phone:document.getElementById('fPhone').value.trim()||null,
     description:document.getElementById('fDesc').value.trim()||null,
-    direction:document.getElementById('fDir').value,
+    direction:document.getElementById('fModalDir').value,
     total_amount:amount,material_cost:matCost,delivery_cost:deliv,
-    payment_status:document.getElementById('fPay').value,
-    payment_method:document.getElementById('fPayType').value,
+    payment_status:document.getElementById('fModalPay').value,
+    payment_method:document.getElementById('fModalPayType').value,
     status:document.getElementById('fCol').value,
     deadline:document.getElementById('fDeadline').value||null,
     date:new Date().toISOString().slice(0,10)
@@ -891,13 +891,13 @@ async function saveOrder(){
   if(id){
     await DB.updateOrder(id,data);
     await DB.logAudit('edit',data.client,'Изменён заказ #'+id);
+    const idx=allOrders.findIndex(o=>o.id===id);
+    if(idx>=0)allOrders[idx]={...allOrders[idx],...data};
   }else{
     const c=await DB.createOrder(data);
-    if(c)await DB.logAudit('create',data.client,'Создан заказ #'+c.id);
+    if(c){allOrders.unshift(c);await DB.logAudit('create',data.client,'Создан заказ #'+c.id);}
   }
   closeOrderModal();
-  allOrders=await DB.orders();
-  allClients=await DB.getClients();
   renderOrders();
 }
 
@@ -912,7 +912,7 @@ async function openDetail(id){
   document.getElementById('dPhone').textContent=o.phone||'—';
   document.getElementById('dDir').innerHTML='<span class="badge badge-'+o.direction+'">'+dl(o.direction)+'</span>';
   document.getElementById('dAmount').textContent=fm(o.total_amount);
-  document.getElementById('dPayType').textContent=pt(o.payment_method||'nal');
+  document.getElementById('dPayType').textContent=o.payment_method?pt(o.payment_method):'—';
   const pe=document.getElementById('dPay');
   pe.textContent=ps(o.payment_status);
   pe.style.color=o.payment_status==='paid'?'var(--green)':o.payment_status==='unpaid'?'var(--danger)':'var(--yellow)';
@@ -1035,7 +1035,7 @@ async function exportExcel(){
   const all=await DB.orders();
   const data=all.map(o=>({
     'ID':o.id,'Дата':o.date||'','Клиент':o.client,'Телефон':o.phone||'',
-    'Направление':dl(o.direction),'Тип оплаты':pt(o.payment_method||'nal'),
+    'Направление':dl(o.direction),'Тип оплаты':o.payment_method?pt(o.payment_method):'—',
     'Статус оплаты':ps(o.payment_status),
     'Выручка':Number(o.total_amount||0),
     'Себестоимость':Number(o.material_cost||0)+Number(o.delivery_cost||0),
