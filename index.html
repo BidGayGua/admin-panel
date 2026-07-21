@@ -3,203 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin</title>
+<title>Kaizen Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --bg:#0f1117; --bg2:#161822; --bg3:#1c1f2b; --bg4:#242736;
-  --border:#282c3a; --text:#e8eaf0; --text-dim:#6b7085; --text-muted:#9ca0b5;
-  --primary:#6c5ce7; --green:#28c76f; --blue:#3b82f6; --yellow:#f59e0b; --danger:#ef4444;
-  --radius:10px; --radius-sm:6px; --shadow:0 2px 12px rgba(0,0,0,.3);
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0f1117;--bg2:#161822;--bg3:#1c1f2b;--bg4:#242736;--border:#282c3a;
+--text:#e8eaf0;--text-dim:#6b7085;--text-muted:#9ca0b5;
+--primary:#6c5ce7;--green:#28c76f;--blue:#3b82f6;--yellow:#f59e0b;--danger:#ef4444;
+--radius:10px;--radius-sm:6px;--shadow:0 2px 12px rgba(0,0,0,.3)
 }
-body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); display:flex; height:100vh; overflow:hidden; }
-.sidebar {
-  width:220px; background:var(--bg2); border-right:1px solid var(--border);
-  display:flex; flex-direction:column; flex-shrink:0; overflow:hidden;
-}
-.sidebar-logo { padding:20px 18px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
-.sidebar-logo svg { width:28px; height:28px; }
-.logo-text { font-size:17px; font-weight:700; letter-spacing:-.3px; }
-.sidebar-directions { padding:12px 10px; border-bottom:1px solid var(--border); }
-.direction-toggle { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:6px; cursor:pointer; font-size:12px; color:var(--text-dim); transition:.15s; }
-.direction-toggle:hover { background:var(--bg4); }
-.direction-toggle .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.direction-toggle .toggle-switch { width:28px; height:14px; background:var(--bg4); border-radius:7px; position:relative; margin-left:auto; transition:.2s; }
-.direction-toggle.on .toggle-switch { background:var(--primary); }
-.direction-toggle .toggle-switch::after { content:''; position:absolute; top:2px; left:2px; width:10px; height:10px; border-radius:50%; background:var(--text); transition:.2s; }
-.direction-toggle.on .toggle-switch::after { left:16px; }
-.sidebar-nav { flex:1; overflow-y:auto; padding:10px; }
-.nav-item { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:6px; cursor:pointer; font-size:13px; color:var(--text-dim); transition:.15s; margin-bottom:2px; }
-.nav-item:hover { background:var(--bg4); color:var(--text); }
-.nav-item.active { background:var(--primary); color:#fff; }
-.nav-item svg { width:16px; height:16px; flex-shrink:0; }
-.sidebar-user { padding:14px 16px; border-top:1px solid var(--border); display:flex; align-items:center; gap:10px; }
-.sidebar-user .avatar { width:32px; height:32px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; }
-.user-name { font-size:13px; font-weight:600; }
-.user-role { font-size:11px; color:var(--text-dim); }
-.main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.topbar { display:flex; align-items:center; gap:12px; padding:12px 24px; background:var(--bg2); border-bottom:1px solid var(--border); flex-shrink:0; }
-.topbar-left { display:flex; align-items:center; gap:12px; flex:1; }
-.topbar-title { font-size:16px; font-weight:700; }
-.topbar-subtitle { font-size:12px; color:var(--text-dim); margin-left:8px; }
-.topbar-center { flex:1; display:flex; align-items:center; }
-.topbar-center input { width:100%; max-width:360px; background:var(--bg4); border:1px solid var(--border); color:var(--text); padding:7px 12px; border-radius:6px; font-size:13px; outline:none; }
-.topbar-center input:focus { border-color:var(--primary); }
-.topbar-right { display:flex; align-items:center; gap:8px; }
-.btn { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:6px; border:none; font-size:13px; font-weight:500; cursor:pointer; transition:.15s; white-space:nowrap; background:var(--bg4); color:var(--text); }
-.btn:hover { opacity:.85; }
-.btn-primary { background:var(--primary); color:#fff; }
-.btn-ghost { background:transparent; color:var(--text-dim); }
-.btn-ghost:hover { background:var(--bg4); color:var(--text); }
-.btn-sm { padding:4px 10px; font-size:12px; }
-.btn-danger { background:var(--danger); color:#fff; }
-.notif-btn { position:relative; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid var(--border); background:var(--bg3); cursor:pointer; }
-.notif-btn:hover { border-color:var(--primary); }
-.notif-badge { position:absolute; top:-4px; right:-4px; min-width:16px; height:16px; background:var(--danger); color:#fff; font-size:10px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; padding:0 4px; }
-.notif-dropdown { position:absolute; top:calc(100% + 6px); right:0; width:340px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); display:none; z-index:100; max-height:320px; overflow-y:auto; }
-.notif-dropdown.open { display:block; }
-.notif-item { display:flex; flex-direction:column; gap:2px; padding:10px 14px; border-bottom:1px solid var(--border); font-size:12px; color:var(--text-muted); }
-.notif-item:last-child { border-bottom:none; }
-.notif-time { font-size:10px; color:var(--text-dim); }
-.content { flex:1; overflow-y:auto; padding:20px 24px; }
-/* Dashboard cards */
-.dash-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:18px; }
-.dash-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; }
-.dash-card-label { font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
-.dash-card-value { font-size:24px; font-weight:700; }
-.dash-card-sub { font-size:11px; color:var(--text-muted); margin-top:4px; }
-/* Filter bar */
-.filter-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:12px; padding:10px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); }
-.filter-bar select, .filter-bar input { background:var(--bg4); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:5px; font-size:12px; outline:none; }
-.filter-bar select:focus, .filter-bar input:focus { border-color:var(--primary); }
-.filter-count { font-size:12px; color:var(--text-dim); margin-left:auto; }
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:20px 18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.logo svg{width:28px;height:28px;flex-shrink:0}
+.logo-text{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.nav{padding:10px;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text-dim);transition:.15s;margin-bottom:2px}
+.nav-item:hover{background:var(--bg4);color:var(--text)}
+.nav-item.active{background:var(--primary);color:#fff}
+.nav-item svg{width:16px;height:16px;flex-shrink:0}
+.nav-item .badge{background:var(--danger);color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:auto}
+.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-footer .avatar{width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600}
+.user-role{font-size:11px;color:var(--text-dim)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 24px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.topbar-title{font-size:16px;font-weight:700}
+.topbar-sub{font-size:12px;color:var(--text-dim)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);border:none;font-size:13px;font-weight:500;cursor:pointer;transition:.15s;white-space:nowrap;background:var(--bg4);color:var(--text)}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-ghost{background:transparent;color:var(--text-dim)}
+.btn-ghost:hover{background:var(--bg4);color:var(--text)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-danger{background:var(--danger);color:#fff}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+.page{display:none}.page.active{display:block}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.card-metric{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.card-metric .label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.card-metric .value{font-size:24px;font-weight:700}
+.card-metric .sub{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+/* Filters */
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius)}
+.filter-bar select,.filter-bar input{background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px;outline:none}
+.filter-bar select:focus,.filter-bar input:focus{border-color:var(--primary)}
+.filter-count{font-size:12px;color:var(--text-dim);margin-left:auto}
+
 /* Table */
-.table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg3); }
-table { width:100%; border-collapse:collapse; font-size:13px; }
-thead { position:sticky; top:0; z-index:2; }
-th { background:var(--bg2); padding:10px 12px; text-align:left; font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim); border-bottom:1px solid var(--border); white-space:nowrap; }
-td { padding:8px 12px; border-bottom:1px solid var(--border); color:var(--text-muted); }
-tr:hover td { background:var(--bg4); }
-td .client-name { font-weight:600; color:var(--text); font-size:12px; }
-td .client-phone { font-size:11px; color:var(--text-dim); }
-.badge { display:inline-flex; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
-.badge-tipografia { background:rgba(40,199,111,.15); color:var(--green); }
-.badge-promotion { background:rgba(59,130,246,.15); color:var(--blue); }
-.badge-repair { background:rgba(245,158,11,.15); color:var(--yellow); }
-.badge-paid { background:rgba(40,199,111,.15); color:var(--green); }
-.badge-unpaid { background:rgba(239,68,68,.15); color:var(--danger); }
-.badge-partial { background:rgba(245,158,11,.15); color:var(--yellow); }
-.badge-overdue { background:rgba(239,68,68,.15); color:var(--danger); }
-.badge-ok { background:rgba(40,199,111,.15); color:var(--green); }
-.text-green { color:var(--green); }
-.text-red { color:var(--danger); }
-.text-yellow { color:var(--yellow); }
-.action-btn { background:none; border:none; color:var(--text-dim); cursor:pointer; padding:4px 6px; border-radius:4px; font-size:12px; }
-.action-btn:hover { background:var(--bg4); color:var(--text); }
+.tw{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg2);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-dim);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:7px 12px;border-bottom:1px solid var(--border);color:var(--text-muted)}
+tr:hover td{background:var(--bg4)}
+.cl-name{font-weight:600;color:var(--text);font-size:12px}
+.cl-phone{font-size:11px;color:var(--text-dim)}
+.badge{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.badge-tipografia{background:rgba(40,199,111,.15);color:var(--green)}
+.badge-promotion{background:rgba(59,130,246,.15);color:var(--blue)}
+.badge-repair{background:rgba(245,158,11,.15);color:var(--yellow)}
+.badge-paid{background:rgba(40,199,111,.15);color:var(--green)}
+.badge-unpaid{background:rgba(239,68,68,.15);color:var(--danger)}
+.badge-partial{background:rgba(245,158,11,.15);color:var(--yellow)}
+.badge-ok{background:rgba(40,199,111,.15);color:var(--green)}
+.badge-critical{background:rgba(239,68,68,.15);color:var(--danger)}
+.badge-low{background:rgba(245,158,11,.15);color:var(--yellow)}
+.text-green{color:var(--green)}
+.text-red{color:var(--danger)}
+.text-yellow{color:var(--yellow)}
+.act{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:3px 5px;border-radius:4px;font-size:13px}
+.act:hover{background:var(--bg4);color:var(--text)}
+
 /* Modal */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:1000; align-items:center; justify-content:center; }
-.modal-overlay.open { display:flex; }
-.modal { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); width:520px; max-width:96vw; max-height:90vh; display:flex; flex-direction:column; box-shadow:var(--shadow); }
-.modal-wide { width:680px; }
-.modal-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
-.modal-title { font-size:16px; font-weight:700; }
-.modal-close { background:none; border:none; color:var(--text-dim); font-size:22px; cursor:pointer; line-height:1; padding:0 4px; }
-.modal-close:hover { color:var(--text); }
-.modal-body { padding:18px 20px; overflow-y:auto; flex:1; }
-.modal-footer { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); }
-.form-group { margin-bottom:12px; }
-.form-row { display:flex; gap:12px; }
-.form-row .form-group { flex:1; }
-.form-label { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim); margin-bottom:4px; }
-.form-input, .form-select, .form-textarea { width:100%; background:var(--bg4); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:6px; font-size:13px; outline:none; font-family:inherit; }
-.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--primary); }
-.form-textarea { resize:vertical; min-height:60px; }
-.form-hint { font-size:11px; color:var(--text-dim); margin-top:3px; }
-/* Template materials in modal */
-.materials-list { margin-top:10px; }
-.mat-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
-.mat-row:last-child { border-bottom:none; }
-.mat-row input { background:var(--bg4); border:1px solid var(--border); color:var(--text); padding:3px 6px; border-radius:4px; font-size:11px; width:60px; outline:none; }
-.mat-row input:focus { border-color:var(--primary); }
-.mat-row .mat-name { flex:1; font-weight:500; }
-.calc-result { margin-top:12px; padding:12px; background:var(--bg4); border-radius:var(--radius); display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
-.calc-item { text-align:center; }
-.calc-item .calc-label { font-size:10px; text-transform:uppercase; color:var(--text-dim); }
-.calc-item .calc-value { font-size:16px; font-weight:700; margin-top:2px; }
-/* Detail modal */
-.detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.detail-section { background:var(--bg3); border-radius:8px; padding:12px; }
-.detail-field { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
-.detail-field:last-child { border-bottom:none; }
-.detail-label { font-size:11px; color:var(--text-dim); text-transform:uppercase; }
-.detail-value { font-size:13px; color:var(--text); font-weight:500; }
-.detail-desc { font-size:12px; color:var(--text-muted); line-height:1.5; white-space:pre-wrap; margin-top:4px; }
-.detail-history { max-height:200px; overflow-y:auto; }
-.detail-history-item { display:flex; align-items:flex-start; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
-.detail-history-item:last-child { border-bottom:none; }
-.detail-history-time { font-size:10px; color:var(--text-dim); white-space:nowrap; }
-.detail-history-text { color:var(--text-muted); }
-/* Page containers */
-.page-container { display:none; }
-.page-container.active { display:block; }
-.page-scroll { overflow-y:auto; }
-/* Other pages minimal */
-.finance-stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:16px; }
-.fin-stat { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
-.fin-stat-label { font-size:11px; color:var(--text-dim); text-transform:uppercase; }
-.fin-stat-value { font-size:22px; font-weight:700; margin-top:4px; }
-.finance-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.finance-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
-.finance-card.full { grid-column:1/-1; }
-.chart-wrap { height:200px; margin-top:8px; }
-.chart-wrap.tall { height:280px; }
-.clients-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
-.client-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
-.client-header { display:flex; gap:10px; margin-bottom:10px; }
-.client-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0; }
-.client-name { font-weight:600; font-size:13px; }
-.client-phone { font-size:11px; color:var(--text-dim); }
-.client-debt { font-size:11px; margin-top:2px; }
-.client-debt.positive { color:var(--danger); }
-.client-debt.zero { color:var(--green); }
-.client-stats { display:flex; gap:12px; }
-.client-stat { flex:1; text-align:center; }
-.client-stat-value { font-weight:700; font-size:14px; }
-.client-stat-value.green { color:var(--green); }
-.client-stat-value.blue { color:var(--blue); }
-.client-stat-value.yellow { color:var(--yellow); }
-.client-stat-label { font-size:10px; color:var(--text-dim); text-transform:uppercase; }
-.materials-table { width:100%; border-collapse:collapse; font-size:13px; }
-.materials-table th { background:var(--bg2); padding:8px 10px; text-align:left; font-weight:600; font-size:11px; color:var(--text-dim); border-bottom:1px solid var(--border); }
-.materials-table td { padding:8px 10px; border-bottom:1px solid var(--border); color:var(--text); }
-.material-tag { display:inline-flex; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; }
-.material-tag.tipografia { background:rgba(40,199,111,.15); color:var(--green); }
-.material-tag.promotion { background:rgba(59,130,246,.15); color:var(--blue); }
-.material-tag.repair { background:rgba(245,158,11,.15); color:var(--yellow); }
-.material-name { font-weight:500; cursor:pointer; }
-.material-name:hover { color:var(--primary); }
-.history-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
-.history-icon { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
-.history-icon.create { background:rgba(40,199,111,.15); color:var(--green); }
-.history-icon.edit { background:rgba(59,130,246,.15); color:var(--blue); }
-.history-icon.delete { background:rgba(239,68,68,.15); color:var(--danger); }
-.history-icon.restore { background:rgba(245,158,11,.15); color:var(--yellow); }
-.history-content { flex:1; }
-.history-event { font-size:13px; }
-.history-time { font-size:11px; color:var(--text-dim); margin-top:2px; }
-.batch-bar { display:none; align-items:center; gap:8px; padding:10px 24px; background:var(--bg3); border-top:1px solid var(--border); }
-.batch-bar.open { display:flex; }
-.batch-count { font-size:13px; font-weight:600; margin-right:8px; }
-@media (max-width:768px) {
-  .sidebar { display:none; }
-  .dash-cards { grid-template-columns:1fr 1fr; }
-  .finance-stats-row { grid-template-columns:1fr 1fr; }
-  .finance-grid { grid-template-columns:1fr; }
-  .topbar-center { display:none; }
-  .detail-grid { grid-template-columns:1fr; }
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);width:560px;max-width:96vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.modal-w{width:680px}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-h .mt{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.modal-close:hover{color:var(--text)}
+.modal-b{padding:18px 20px;overflow-y:auto;flex:1}
+.modal-f{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)}
+.fg{margin-bottom:12px}
+.fr{display:flex;gap:12px}
+.fr .fg{flex:1}
+.fl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-dim);margin-bottom:4px}
+.fi,.fs,.ft{width:100%;background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:13px;outline:none;font-family:inherit}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--primary)}
+.ft{resize:vertical;min-height:50px}
+.fh{font-size:11px;color:var(--text-dim);margin-top:2px}
+
+/* Calc */
+.calc-box{margin-top:10px;padding:12px;background:var(--bg4);border-radius:var(--radius);display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.calc-item{text-align:center}
+.calc-item .cl{font-size:10px;text-transform:uppercase;color:var(--text-dim)}
+.calc-item .cv{font-size:16px;font-weight:700;margin-top:2px}
+
+/* Mat row */
+.mat-row{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.mat-row:last-child{border-bottom:none}
+.mat-row input{background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:3px 5px;border-radius:4px;font-size:11px;width:55px;outline:none}
+.mat-row input:focus{border-color:var(--primary)}
+.mat-row .mn{flex:1;font-weight:500}
+.material-tag{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.material-tag.tipografia{background:rgba(40,199,111,.15);color:var(--green)}
+.material-tag.promotion{background:rgba(59,130,246,.15);color:var(--blue)}
+.material-tag.repair{background:rgba(245,158,11,.15);color:var(--yellow)}
+.warehouse-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.wh-stat{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;text-align:center}
+.wh-stat .val{font-size:22px;font-weight:700}
+.wh-stat .lbl{font-size:11px;color:var(--text-dim)}
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.client-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.client-card .ch{display:flex;gap:10px;margin-bottom:10px;align-items:center}
+.client-card .ca{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+.client-card .cn{font-weight:600;font-size:13px}
+.client-card .cp{font-size:11px;color:var(--text-dim)}
+.client-card .cs{display:flex;gap:8px}
+.client-card .cs>div{flex:1;text-align:center}
+.client-card .cs .v{font-weight:700;font-size:13px}
+.client-card .cs .l{font-size:10px;color:var(--text-dim);text-transform:uppercase}
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tpl-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.tpl-card .th{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.tpl-card .tn{font-weight:600}
+.tpl-card .td{font-size:12px;color:var(--text-dim);margin-bottom:6px}
+.tpl-card .ta{font-size:14px;font-weight:700}
+.tpl-card .taf{display:flex;gap:6px;margin-top:10px}
+.cat-badge{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--bg4);color:var(--text-dim)}
+.search-input{background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-size:12px;outline:none;width:200px}
+.search-input:focus{border-color:var(--primary)}
+@media(max-width:768px){
+.sidebar{display:none}
+.cards{grid-template-columns:1fr 1fr}
+.client-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -207,26 +154,17 @@ td .client-phone { font-size:11px; color:var(--text-dim); }
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-  <div class="sidebar-logo">
+  <div class="logo">
     <svg viewBox="0 0 28 28" fill="none"><rect x="4" y="4" width="20" height="20" rx="5" stroke="#6c5ce7" stroke-width="2"/><path d="M10 14l3 3 5-6" stroke="#6c5ce7" stroke-width="2" stroke-linecap="round"/></svg>
-    <div class="logo-text">Admin</div>
+    <div class="logo-text">Kaizen Admin</div>
   </div>
-  <div class="sidebar-directions" id="dirToggles">
-    <div class="direction-toggle on" data-dir="tipografia"><span class="dot" style="background:var(--green)"></span>Типография<div class="toggle-switch"></div></div>
-    <div class="direction-toggle on" data-dir="promotion"><span class="dot" style="background:var(--blue)"></span>Промоушен<div class="toggle-switch"></div></div>
-    <div class="direction-toggle on" data-dir="repair"><span class="dot" style="background:var(--yellow)"></span>Ремонт<div class="toggle-switch"></div></div>
+  <div class="nav">
+    <div class="nav-item active" data-page="orders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Заказы</div>
+    <div class="nav-item" data-page="warehouse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Склад</div>
+    <div class="nav-item" data-page="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Клиенты</div>
+    <div class="nav-item" data-page="templates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Шаблоны</div>
   </div>
-  <div class="sidebar-nav">
-    <div class="nav-item active" data-page="orders-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Заказы</div>
-    <div class="nav-item" data-page="calendar-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Календарь</div>
-    <div class="nav-item" data-page="finance-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Финансы</div>
-    <div class="nav-item" data-page="clients-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Клиенты</div>
-    <div class="nav-item" data-page="materials-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Склад</div>
-    <div class="nav-item" data-page="templates-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Шаблоны</div>
-    <div class="nav-item" data-page="archive-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Корзина</div>
-    <div class="nav-item" data-page="history-page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>История</div>
-  </div>
-  <div class="sidebar-user">
+  <div class="sidebar-footer">
     <div class="avatar">В</div>
     <div><div class="user-name">Валерий</div><div class="user-role">Владелец</div></div>
   </div>
@@ -234,254 +172,180 @@ td .client-phone { font-size:11px; color:var(--text-dim); }
 
 <!-- MAIN -->
 <div class="main">
+
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
-      <div class="topbar-title" id="topbarTitle">Заказы</div>
-      <div class="topbar-subtitle" id="topbarSubtitle">Реестр всех заказов</div>
-    </div>
-    <div class="topbar-center">
-      <input type="text" placeholder="Поиск по клиенту, описанию..." id="searchInput" oninput="renderTable()">
+      <div class="topbar-title" id="pageTitle">Заказы</div>
+      <div class="topbar-sub" id="pageSub">Реестр всех заказов</div>
     </div>
     <div class="topbar-right">
-      <div style="position:relative">
-        <button class="notif-btn" onclick="toggleNotifications(event)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="notif-badge" id="notifCount">0</span>
-        </button>
-        <div class="notif-dropdown" id="notifDropdown"><div class="notif-list" id="notifList"></div></div>
-      </div>
+      <input type="text" class="search-input" placeholder="Поиск..." id="searchInput" oninput="renderPage()">
       <button class="btn btn-primary" onclick="openOrderModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Добавить заказ</button>
       <button class="btn btn-ghost" onclick="exportExcel()" title="Экспорт"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="21 15 21 20 3 20 3 15"/><line x1="12" y1="3" x2="12" y2="15"/><polyline points="9 10 12 7 15 10"/></svg> Excel</button>
-      <input type="file" id="excelInput" accept=".xlsx,.xls" style="display:none" onchange="importExcel(event)">
     </div>
   </div>
 
-  <div class="page-container active" id="orders-page">
-
-    <!-- Dashboard cards -->
-    <div class="dash-cards">
-      <div class="dash-card"><div class="dash-card-label">Выручка</div><div class="dash-card-value text-green" id="dashRevenue">0 ₸</div><div class="dash-card-sub">Общая сумма заказов</div></div>
-      <div class="dash-card"><div class="dash-card-label">Себестоимость</div><div class="dash-card-value text-red" id="dashCost">0 ₸</div><div class="dash-card-sub">Материалы + доставка</div></div>
-      <div class="dash-card"><div class="dash-card-label">Чистая прибыль</div><div class="dash-card-value" id="dashProfit">0 ₸</div><div class="dash-card-sub" id="dashProfitLabel">Выручка − себестоимость</div></div>
-      <div class="dash-card"><div class="dash-card-label">Маржинальность</div><div class="dash-card-value" id="dashMargin">0%</div><div class="dash-card-sub">% чистой прибыли</div></div>
+  <!-- PAGE: ORDERS -->
+  <div class="page active" id="page-orders">
+    <div class="cards">
+      <div class="card-metric"><div class="label">Выручка</div><div class="value text-green" id="mRevenue">0 ₸</div><div class="sub">Общая сумма заказов</div></div>
+      <div class="card-metric"><div class="label">Себестоимость</div><div class="value text-red" id="mCost">0 ₸</div><div class="sub">Материалы + доставка</div></div>
+      <div class="card-metric"><div class="label">Чистая прибыль</div><div class="value" id="mProfit">0 ₸</div><div class="sub" id="mProfitSub">Выручка − себестоимость</div></div>
+      <div class="card-metric"><div class="label">Маржинальность</div><div class="value" id="mMargin">0%</div><div class="sub">% чистой прибыли</div></div>
     </div>
-
-    <!-- Filter bar -->
     <div class="filter-bar">
-      <select id="filterDirection" onchange="renderTable()">
-        <option value="all">Все направления</option>
-        <option value="tipografia">Типография</option>
-        <option value="promotion">Промоушен</option>
-        <option value="repair">Ремонт</option>
-      </select>
-      <select id="filterPayment" onchange="renderTable()">
-        <option value="all">Любая оплата</option>
-        <option value="paid">Оплачено</option>
-        <option value="unpaid">Не оплачено</option>
-        <option value="partial">Частично</option>
-      </select>
-      <select id="filterYear" onchange="renderTable()">
-        <option value="all">Все года</option>
-      </select>
-      <input type="date" id="filterDateFrom" onchange="renderTable()" placeholder="От">
-      <input type="date" id="filterDateTo" onchange="renderTable()" placeholder="До">
+      <select id="fDir" onchange="renderOrders()"><option value="all">Все направления</option><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select>
+      <select id="fPay" onchange="renderOrders()"><option value="all">Любая оплата</option><option value="paid">Оплачено</option><option value="unpaid">Не оплачено</option><option value="partial">Частично</option></select>
+      <select id="fYear" onchange="renderOrders()"><option value="all">Все года</option></select>
+      <input type="date" id="fDateFrom" onchange="renderOrders()" placeholder="От">
+      <input type="date" id="fDateTo" onchange="renderOrders()" placeholder="До">
       <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Сброс</button>
-      <span class="filter-count" id="filterCount">Все заказы</span>
+      <span class="filter-count" id="filterCount">Загрузка...</span>
     </div>
-
-    <!-- Table -->
-    <div class="table-wrap">
+    <div class="tw">
       <table>
-        <thead>
-          <tr>
-            <th>ID / Дата</th>
-            <th>Клиент</th>
-            <th>Направление</th>
-            <th>Оплата</th>
-            <th>Выручка</th>
-            <th>Себестоимость</th>
-            <th>Прибыль</th>
-            <th>Статус / Дедлайн</th>
-            <th></th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th>ID / Дата</th><th>Клиент</th><th>Направление</th><th>Оплата</th>
+          <th>Выручка</th><th>Себестоимость</th><th>Прибыль</th><th>Статус</th><th></th>
+        </tr></thead>
         <tbody id="ordersBody"></tbody>
       </table>
     </div>
-
   </div>
 
-  <!-- Other pages (minimal) -->
-  <div id="calendar-page" class="page-container"><div class="page-scroll" style="padding:20px 24px">
-    <div class="filter-bar" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="btn btn-ghost btn-sm" id="calPrevBtn">&lsaquo; Назад</button>
-        <span style="font-weight:600;font-size:14px" id="calMonthTitle">Июль 2026</span>
-        <button class="btn btn-ghost btn-sm" id="calNextBtn">Вперед &rsaquo;</button>
-        <button class="btn btn-ghost btn-sm" id="calTodayBtn">Сегодня</button>
-      </div>
+  <!-- PAGE: WAREHOUSE -->
+  <div class="page" id="page-warehouse">
+    <div class="warehouse-grid" id="whStats">
+      <div class="wh-stat"><div class="val text-green" id="whTotal">0</div><div class="lbl">Позиций</div></div>
+      <div class="wh-stat"><div class="val text-green" id="whNormal">0</div><div class="lbl">В норме</div></div>
+      <div class="wh-stat"><div class="val text-yellow" id="whLow">0</div><div class="lbl">Заканчиваются</div></div>
+      <div class="wh-stat"><div class="val text-red" id="whCritical">0</div><div class="lbl">Требуется закупка</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden">
-      <div style="background:var(--bg2);padding:10px;text-align:center;font-size:12px;color:var(--text-dim)">Пн</div>
-      <div style="background:var(--bg2);padding:10px;text-align:center;font-size:12px;color:var(--text-dim)">Вт</div>
-      <div style="background:var(--bg2);padding:10px;text-align:center;font-size:12px;color:var(--text-dim)">Ср</div>
-      <div style="background:var(--bg2);padding:10px;text-align:center;font-size:12px;color:var(--text-dim)">Чт</div>
-      <div style="background:var(--bg2);padding:10px;text-align:center;font-size:12px;color:var(--text-dim)">Пт</div>
-      <div style="background:var(--bg2);padding:10px;text-align:center;font-size:12px;color:var(--text-dim)">Сб</div>
-      <div style="background:var(--bg2);padding:10px;text-align:center;font-size:12px;color:var(--text-dim)">Вс</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+      <input type="text" class="search-input" placeholder="Поиск материала..." id="whSearch" oninput="renderWarehouse()">
+      <select id="whCatFilter" onchange="renderWarehouse()" style="background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px;outline:none">
+        <option value="all">Все категории</option>
+        <option value="Бумага">Бумага</option><option value="Краска">Краска</option><option value="Тонер">Тонер / Картриджи</option>
+        <option value="Плёнка">Плёнка</option><option value="Расходники">Расходники</option><option value="Инструмент">Инструмент</option><option value="Прочее">Прочее</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="openMaterialModal()">+ Добавить</button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);min-height:400px" id="calGrid"></div>
-  </div></div>
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>Материал</th><th>Категория</th><th>Ед.</th><th>Остаток</th><th>Мин. порог</th>
+          <th>Себест. ед.</th><th>Общая ст-ть</th><th>Статус</th><th></th>
+        </tr></thead>
+        <tbody id="warehouseBody"></tbody>
+      </table>
+    </div>
+  </div>
 
-  <div id="finance-page" class="page-container"><div class="page-scroll" style="padding:20px 24px">
-    <div class="filter-bar">
-      <select id="finDirection" onchange="renderFinance()"><option value="all">Все направления</option><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select>
-      <select id="finYear" onchange="renderFinance()"><option value="all">Все года</option></select>
-      <select id="finMonth" onchange="renderFinance()"><option value="all">Все месяцы</option><option value="1">Январь</option><option value="2">Февраль</option><option value="3">Март</option><option value="4">Апрель</option><option value="5">Май</option><option value="6">Июнь</option><option value="7">Июль</option><option value="8">Август</option><option value="9">Сентябрь</option><option value="10">Октябрь</option><option value="11">Ноябрь</option><option value="12">Декабрь</option></select>
-    </div>
-    <div class="finance-stats-row">
-      <div class="fin-stat"><div class="fin-stat-label">Выручка</div><div class="fin-stat-value green" id="finRev">0 ₸</div></div>
-      <div class="fin-stat"><div class="fin-stat-label">Расходы</div><div class="fin-stat-value red" id="finExp">0 ₸</div></div>
-      <div class="fin-stat"><div class="fin-stat-label">Прибыль</div><div class="fin-stat-value blue" id="finProfit">0 ₸</div></div>
-      <div class="fin-stat"><div class="fin-stat-label">Долги</div><div class="fin-stat-value yellow" id="finDebt">0 ₸</div></div>
-    </div>
-    <div class="finance-grid">
-      <div class="finance-card full"><div class="finance-card-header"><div style="font-weight:600;font-size:14px">Динамика выручки</div></div><div class="chart-wrap tall"><canvas id="revenueChart"></canvas></div></div>
-      <div class="finance-card"><div class="finance-card-header"><div style="font-weight:600;font-size:14px">P&amp;L по направлениям</div></div><div class="chart-wrap"><canvas id="pnlChart"></canvas></div></div>
-      <div class="finance-card"><div class="finance-card-header"><div style="font-weight:600;font-size:14px">Выручка по направлениям</div></div><div class="chart-wrap"><canvas id="directionChart"></canvas></div></div>
-    </div>
-  </div></div>
-
-  <div id="clients-page" class="page-container"><div class="page-scroll" style="padding:20px 24px">
+  <!-- PAGE: CLIENTS -->
+  <div class="page" id="page-clients">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div style="font-weight:700;font-size:16px">Клиенты</div>
       <div style="display:flex;gap:8px">
-        <input type="text" placeholder="Поиск..." id="clientSearch" oninput="renderClients()" style="background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:5px;font-size:12px;outline:none">
-        <select id="clientDirFilter" onchange="renderClients()" style="background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:5px;font-size:12px;outline:none"><option value="all">Все</option><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select>
+        <input type="text" class="search-input" placeholder="Поиск клиента..." id="clSearch" oninput="renderClients()">
+        <select id="clDir" onchange="renderClients()" style="background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px;outline:none">
+          <option value="all">Все</option><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option>
+        </select>
       </div>
     </div>
-    <div class="clients-grid" id="clientsGrid"></div>
-  </div></div>
+    <div class="client-grid" id="clientsGrid"></div>
+  </div>
 
-  <div id="materials-page" class="page-container"><div class="page-scroll" style="padding:20px 24px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-weight:700;font-size:16px">Склад материалов</div>
-      <button class="btn btn-primary btn-sm" onclick="openMaterialModal()">+ Добавить</button>
-    </div>
-    <div style="display:flex;gap:16px;margin-bottom:14px">
-      <div><div style="font-size:22px;font-weight:700;color:var(--green)" id="matTotal">0</div><div style="font-size:11px;color:var(--text-dim)">Позиций</div></div>
-      <div><div style="font-size:22px;font-weight:700;color:var(--blue)" id="matNormal">0</div><div style="font-size:11px;color:var(--text-dim)">В норме</div></div>
-      <div><div style="font-size:22px;font-weight:700;color:var(--yellow)" id="matLow">0</div><div style="font-size:11px;color:var(--text-dim)">Мало</div></div>
-      <div><div style="font-size:22px;font-weight:700;color:var(--danger)" id="matCritical">0</div><div style="font-size:11px;color:var(--text-dim)">Критично</div></div>
-    </div>
-    <div class="table-wrap"><table class="materials-table"><thead><tr><th>Материал</th><th>Направление</th><th>В наличии</th><th>Мин.</th><th>Цена</th><th></th></tr></thead><tbody id="materialsBody"></tbody></table></div>
-  </div></div>
-
-  <div id="templates-page" class="page-container"><div class="page-scroll" style="padding:20px 24px">
+  <!-- PAGE: TEMPLATES -->
+  <div class="page" id="page-templates">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-weight:700;font-size:16px">Шаблоны заказов</div>
       <button class="btn btn-primary btn-sm" onclick="openTemplateModal()">+ Создать шаблон</button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px" id="tplGrid"></div>
-  </div></div>
-
-  <div id="archive-page" class="page-container"><div class="page-scroll" style="padding:20px 24px">
-    <div style="font-weight:700;font-size:16px;margin-bottom:14px">Корзина</div>
-    <div class="table-wrap"><table class="materials-table"><thead><tr><th>ID</th><th>Клиент</th><th>Описание</th><th>Сумма</th><th>Направление</th><th>Дата удаления</th><th></th></tr></thead><tbody id="archiveBody"></tbody></table></div>
-  </div></div>
-
-  <div id="history-page" class="page-container"><div class="page-scroll" style="padding:20px 24px">
-    <div style="font-weight:700;font-size:16px;margin-bottom:14px">История изменений</div>
-    <div id="historyList"></div>
-  </div></div>
+    <div class="tpl-grid" id="tplGrid"></div>
+  </div>
 
 </div><!-- /main -->
 
 <!-- ORDER MODAL -->
 <div class="modal-overlay" id="orderModal" onclick="if(event.target===this)closeOrderModal()">
-  <div class="modal modal-wide">
-    <div class="modal-header"><span class="modal-title" id="orderModalTitle">Новый заказ</span><button class="modal-close" onclick="closeOrderModal()">&times;</button></div>
-    <div class="modal-body">
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Клиент</label><input class="form-input" placeholder="Имя или компания" id="fClient"></div>
-        <div class="form-group"><label class="form-label">Телефон</label><input class="form-input" placeholder="+7 777 000 00 00" id="fPhone"></div>
+  <div class="modal modal-w">
+    <div class="modal-h"><span class="mt" id="omTitle">Новый заказ</span><button class="modal-close" onclick="closeOrderModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="fr"><div class="fg"><label class="fl">Клиент</label><input class="fi" placeholder="Имя или компания" id="fClient"></div><div class="fg"><label class="fl">Телефон</label><input class="fi" placeholder="+7 777 000 00 00" id="fPhone"></div></div>
+      <div class="fg"><label class="fl">Описание</label><textarea class="ft" placeholder="Что нужно сделать" id="fDesc"></textarea></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Направление</label><select class="fs" id="fDir"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select></div>
+        <div class="fg"><label class="fl">Шаблон</label><select class="fs" id="fTpl" onchange="applyTemplate()"><option value="">— Без шаблона —</option></select></div>
       </div>
-      <div class="form-group"><label class="form-label">Описание заказа</label><textarea class="form-textarea" placeholder="Что нужно сделать" id="fDesc" style="min-height:50px"></textarea></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Направление</label><select class="form-select" id="fDirection"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select></div>
-        <div class="form-group"><label class="form-label">Шаблон</label><select class="form-select" id="fTemplate" onchange="applyTemplateCalc()"><option value="">— Без шаблона —</option></select></div>
-      </div>
-
-      <!-- Cost calculator -->
-      <div id="costCalcSection" style="display:none;margin-top:10px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-dim)">📋 Материалы по шаблону</div>
-        <div id="templateMaterialsList"></div>
-        <div class="form-row" style="margin-top:8px">
-          <div class="form-group"><label class="form-label">Тираж / Количество</label><input class="form-input" type="number" placeholder="1" id="fRunQty" value="1" oninput="calcCost()"></div>
-          <div class="form-group"><label class="form-label">Наценка, %</label><input class="form-input" type="number" placeholder="30" id="fMarkup" value="30" oninput="calcCost()"></div>
+      <div id="calcSection" style="display:none;margin-top:10px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-dim)">📦 Материалы для расчёта</div>
+        <div id="calcMatsList"></div>
+        <div class="fr" style="margin-top:8px">
+          <div class="fg"><label class="fl">Тираж</label><input class="fi" type="number" value="1" id="fQty" oninput="recalc()"></div>
+          <div class="fg"><label class="fl">Наценка %</label><input class="fi" type="number" value="30" id="fMarkup" oninput="recalc()"></div>
         </div>
-        <div class="calc-result">
-          <div class="calc-item"><div class="calc-label">Себестоимость</div><div class="calc-value text-red" id="calcCostVal">0 ₸</div></div>
-          <div class="calc-item"><div class="calc-label">Рек. цена</div><div class="calc-value" id="calcRecPrice">0 ₸</div></div>
-          <div class="calc-item"><div class="calc-label">Прибыль</div><div class="calc-value text-green" id="calcProfitVal">0 ₸</div></div>
+        <div class="calc-box">
+          <div class="calc-item"><div class="cl">Себестоимость</div><div class="cv text-red" id="cCost">0 ₸</div></div>
+          <div class="calc-item"><div class="cl">Рек. цена</div><div class="cv" id="cPrice">0 ₸</div></div>
+          <div class="calc-item"><div class="cl">Прибыль</div><div class="cv text-green" id="cProfit">0 ₸</div></div>
         </div>
       </div>
-
       <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Сумма для клиента (₸)</label><input class="form-input" placeholder="0" id="fAmount" oninput="manualAmountEdit()"></div>
-          <div class="form-group"><label class="form-label">Себестоимость (₸)</label><input class="form-input" placeholder="0" id="fCostInput" oninput="manualCostEdit()"></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Цена для клиента (₸)</label><input class="fi" id="fAmount" oninput="onAmountEdit()"></div>
+          <div class="fg"><label class="fl">Себестоимость (₸)</label><input class="fi" id="fCostManual"></div>
         </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Доставка (₸)</label><input class="form-input" placeholder="0" id="fDelivery"></div>
-          <div class="form-group"><label class="form-label">Срок / Дедлайн</label><input class="form-input" type="date" id="fDeadline"></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Доставка (₸)</label><input class="fi" id="fDelivery"></div>
+          <div class="fg"><label class="fl">Дедлайн</label><input class="fi" type="date" id="fDeadline"></div>
         </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Статус оплаты</label><select class="form-select" id="fPayStatus"><option value="unpaid">Не оплачено</option><option value="paid">Оплачено</option><option value="partial">Частично</option></select></div>
-          <div class="form-group"><label class="form-label">Статус</label><select class="form-select" id="fColumn"><option value="incoming">Входящие</option><option value="inprogress">В работе</option><option value="done">Готово</option><option value="completed">Выполнено</option></select></div>
+        <div class="fr">
+          <div class="fg"><label class="fl">Оплата</label><select class="fs" id="fPay"><option value="unpaid">Не оплачено</option><option value="paid">Оплачено</option><option value="partial">Частично</option></select></div>
+          <div class="fg"><label class="fl">Статус</label><select class="fs" id="fCol"><option value="incoming">Входящие</option><option value="inprogress">В работе</option><option value="done">Готово</option><option value="completed">Выполнено</option></select></div>
         </div>
       </div>
       <input type="hidden" id="fEditId">
-      <input type="hidden" id="fCostData"><!-- JSON of materials cost -->
+      <input type="hidden" id="fMatData">
     </div>
-    <div class="modal-footer">
+    <div class="modal-f">
       <button class="btn btn-ghost" onclick="closeOrderModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveOrder()" id="orderModalSaveBtn">Создать заказ</button>
+      <button class="btn btn-primary" onclick="saveOrder()" id="omSave">Создать заказ</button>
     </div>
   </div>
 </div>
 
 <!-- DETAIL MODAL -->
 <div class="modal-overlay" id="detailModal" onclick="if(event.target===this)closeDetailModal()">
-  <div class="modal modal-wide">
-    <div class="modal-header"><span class="modal-title" id="detailModalTitle">Заказ</span><button class="modal-close" onclick="closeDetailModal()">&times;</button></div>
-    <div class="modal-body">
-      <div class="detail-grid">
-        <div class="detail-section">
-          <div class="detail-field"><span class="detail-label">Клиент</span><span class="detail-value" id="detailClient">—</span></div>
-          <div class="detail-field"><span class="detail-label">Телефон</span><span class="detail-value" id="detailPhone">—</span></div>
-          <div class="detail-field"><span class="detail-label">Направление</span><span class="detail-value" id="detailDirection">—</span></div>
-          <div class="detail-field"><span class="detail-label">Сумма</span><span class="detail-value" id="detailAmount">—</span></div>
-          <div class="detail-field"><span class="detail-label">Оплата</span><span class="detail-value" id="detailPayment">—</span></div>
+  <div class="modal modal-w">
+    <div class="modal-h"><span class="mt" id="dmTitle">Заказ</span><button class="modal-close" onclick="closeDetailModal()">&times;</button></div>
+    <div class="modal-b">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:var(--bg3);border-radius:8px;padding:12px">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Клиент</span><span style="font-size:13px;font-weight:500" id="dClient">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Телефон</span><span id="dPhone">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Направление</span><span id="dDir">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Сумма</span><span style="font-weight:600" id="dAmount">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Оплата</span><span id="dPay">—</span></div>
         </div>
-        <div class="detail-section">
-          <div class="detail-field"><span class="detail-label">Статус</span><span class="detail-value" id="detailStatus">—</span></div>
-          <div class="detail-field"><span class="detail-label">Дата</span><span class="detail-value" id="detailDate">—</span></div>
-          <div class="detail-field"><span class="detail-label">Дедлайн</span><span class="detail-value" id="detailDeadline">—</span></div>
-          <div class="detail-field"><span class="detail-label">Себестоимость</span><span class="detail-value" id="detailCost">—</span></div>
-          <div class="detail-field"><span class="detail-label">Прибыль</span><span class="detail-value" id="detailProfit">—</span></div>
+        <div style="background:var(--bg3);border-radius:8px;padding:12px">
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Статус</span><span id="dStatus">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Дата</span><span id="dDate">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Дедлайн</span><span id="dDeadline">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Себестоимость</span><span id="dCost">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:4px 0"><span style="font-size:11px;color:var(--text-dim);text-transform:uppercase">Прибыль</span><span style="font-weight:600" id="dProfit">—</span></div>
         </div>
       </div>
-      <div class="detail-section" style="margin-top:12px">
-        <div class="detail-label" style="margin-bottom:4px">Описание</div>
-        <div class="detail-desc" id="detailDesc">—</div>
+      <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-top:10px">
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">Описание</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5;white-space:pre-wrap" id="dDesc">—</div>
       </div>
-      <div class="detail-section" style="margin-top:12px">
-        <div class="detail-label" style="margin-bottom:4px">История</div>
-        <div class="detail-history" id="detailHistory"></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-top:10px">
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">История</div>
+        <div id="dHistory" style="max-height:160px;overflow-y:auto;font-size:12px;color:var(--text-muted)"></div>
       </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-f">
       <button class="btn btn-ghost" onclick="closeDetailModal()">Закрыть</button>
       <button class="btn btn-primary" onclick="editFromDetail()">Редактировать</button>
     </div>
@@ -491,55 +355,50 @@ td .client-phone { font-size:11px; color:var(--text-dim); }
 <!-- TEMPLATE MODAL -->
 <div class="modal-overlay" id="templateModal" onclick="if(event.target===this)closeTemplateModal()">
   <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="tplModalTitle">Новый шаблон</span><button class="modal-close" onclick="closeTemplateModal()">&times;</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Название шаблона</label><input class="form-input" placeholder="Например: Визитки 1000шт" id="tplName"></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Направление</label><select class="form-select" id="tplDirection"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select></div>
-        <div class="form-group"><label class="form-label">Рек. цена (₸)</label><input class="form-input" placeholder="0" id="tplAmount"></div>
-      </div>
-      <div class="form-group"><label class="form-label">Описание</label><textarea class="form-textarea" placeholder="Что входит в шаблон" id="tplDesc"></textarea></div>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+    <div class="modal-h"><span class="mt" id="tmTitle">Новый шаблон</span><button class="modal-close" onclick="closeTemplateModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="fg"><label class="fl">Название</label><input class="fi" placeholder="Например: Визитки 1000шт" id="tName"></div>
+      <div class="fr"><div class="fg"><label class="fl">Направление</label><select class="fs" id="tDir"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select></div><div class="fg"><label class="fl">Рек. цена (₸)</label><input class="fi" id="tAmount"></div></div>
+      <div class="fg"><label class="fl">Описание</label><textarea class="ft" id="tDesc"></textarea></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:12px;font-weight:600;color:var(--text-dim)">🧮 Материалы для калькулятора</div>
-          <button class="btn btn-ghost btn-sm" onclick="addTemplateMaterial()">+ Добавить материал</button>
+          <button class="btn btn-ghost btn-sm" onclick="addTplMat()">+ Добавить</button>
         </div>
-        <div id="tplMaterialsList"></div>
+        <div id="tplMats"></div>
       </div>
-      <input type="hidden" id="tplEditId">
+      <input type="hidden" id="tEditId">
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeTemplateModal()">Отмена</button>
-      <button class="btn btn-primary" onclick="saveTemplate()">Сохранить шаблон</button>
-    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeTemplateModal()">Отмена</button><button class="btn btn-primary" onclick="saveTemplate()">Сохранить</button></div>
   </div>
 </div>
 
 <!-- MATERIAL MODAL -->
 <div class="modal-overlay" id="materialModal" onclick="if(event.target===this)closeMaterialModal()">
   <div class="modal">
-    <div class="modal-header"><span class="modal-title" id="matModalTitle">Материал</span><button class="modal-close" onclick="closeMaterialModal()">&times;</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Название</label><input class="form-input" id="matName"></div>
-      <div class="form-row"><div class="form-group"><label class="form-label">Направление</label><select class="form-select" id="matDirection"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select></div><div class="form-group"><label class="form-label">Ед.</label><input class="form-input" id="matUnit" placeholder="шт"></div></div>
-      <div class="form-row"><div class="form-group"><label class="form-label">Кол-во</label><input class="form-input" id="matQty" type="number"></div><div class="form-group"><label class="form-label">Мин.</label><input class="form-input" id="matMin" type="number"></div></div>
-      <div class="form-group"><label class="form-label">Цена закупки (₸)</label><input class="form-input" id="matPrice" type="number"></div>
-      <input type="hidden" id="matEditId">
+    <div class="modal-h"><span class="mt" id="mmTitle">Материал</span><button class="modal-close" onclick="closeMaterialModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="fg"><label class="fl">Название</label><input class="fi" id="mName"></div>
+      <div class="fr"><div class="fg"><label class="fl">Категория</label><select class="fs" id="mCat"><option value="Бумага">Бумага</option><option value="Краска">Краска</option><option value="Тонер">Тонер / Картриджи</option><option value="Плёнка">Плёнка</option><option value="Расходники">Расходники</option><option value="Инструмент">Инструмент</option><option value="Прочее">Прочее</option></select></div><div class="fg"><label class="fl">Ед.</label><input class="fi" id="mUnit" placeholder="шт"></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Направление</label><select class="fs" id="mDir"><option value="tipografia">Типография</option><option value="promotion">Промоушен</option><option value="repair">Ремонт</option></select></div><div class="fg"><label class="fl"></label><br></div></div>
+      <div class="fr"><div class="fg"><label class="fl">Количество</label><input class="fi" type="number" id="mQty"></div><div class="fg"><label class="fl">Мин. порог</label><input class="fi" type="number" id="mMin"></div></div>
+      <div class="fg"><label class="fl">Цена закупки (₸)</label><input class="fi" type="number" id="mPrice"></div>
+      <input type="hidden" id="mEditId">
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMaterialModal()">Отмена</button><button class="btn btn-primary" onclick="saveMaterial()">Сохранить</button></div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeMaterialModal()">Отмена</button><button class="btn btn-primary" onclick="saveMaterial()">Сохранить</button></div>
   </div>
 </div>
 
 <!-- MOVEMENT MODAL -->
 <div class="modal-overlay" id="movementModal" onclick="if(event.target===this)closeMovementModal()">
   <div class="modal">
-    <div class="modal-header"><span class="modal-title">Приход/Расход</span><button class="modal-close" onclick="closeMovementModal()">&times;</button></div>
-    <div class="modal-body">
-      <div class="form-group"><label class="form-label">Материал</label><div id="movMaterialName" style="font-weight:600;font-size:14px;padding:6px 0"></div></div>
-      <div class="form-group"><label class="form-label">Количество</label><input class="form-input" id="movQty" type="number"></div>
-      <input type="hidden" id="movMaterialId"><input type="hidden" id="movType">
+    <div class="modal-h"><span class="mt">Приход / Расход</span><button class="modal-close" onclick="closeMovementModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="fg"><label class="fl">Материал</label><div id="movName" style="font-weight:600;font-size:14px;padding:4px 0"></div></div>
+      <div class="fg"><label class="fl">Количество</label><input class="fi" type="number" id="movQty"></div>
+      <input type="hidden" id="movId"><input type="hidden" id="movType">
     </div>
-    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeMovementModal()">Отмена</button><button class="btn btn-primary" onclick="saveMovement()">Подтвердить</button></div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeMovementModal()">Отмена</button><button class="btn btn-primary" onclick="saveMovement()">Подтвердить</button></div>
   </div>
 </div>
 
@@ -549,838 +408,619 @@ const SUPABASE_URL = 'https://vdtpdwjvqabhydoxbqqg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkdHBkd2p2cWFiaHlkb3hicXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0MTU0OTAsImV4cCI6MjA5OTk5MTQ5MH0.Y8Q0ohBfCdRquOOclPampF3L0Gd1j8opdfYYyxMYz_w';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const DIR_MAP = { tipografia:'Типография', promotion:'Промоушен', repair:'Ремонт' };
-const MONTHS_RU = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const COLUMNS = [
-  { id:'incoming', label:'Входящие', icon:'📥' },
-  { id:'inprogress', label:'В работе', icon:'⚙️' },
-  { id:'done', label:'Готово', icon:'✅' },
-  { id:'completed', label:'Выполнено', icon:'🏁' },
-  { id:'cancelled', label:'Отменён', icon:'❌' }
+const DIR = {tipografia:'Типография',promotion:'Промоушен',repair:'Ремонт'};
+const PAY = {paid:'Оплачено',unpaid:'Не оплачено',partial:'Частично'};
+const COL = [
+  {id:'incoming',l:'Входящие'},{id:'inprogress',l:'В работе'},{id:'done',l:'Готово'},
+  {id:'completed',l:'Выполнено'},{id:'cancelled',l:'Отменён'}
 ];
-let chartInstances = {};
-let calCurrentDate = new Date();
-let allOrdersCache = [];
-let allTemplatesCache = [];
+const CAT_COLORS = {Бумага:'#6c5ce7',Краска:'#3b82f6',Тонер:'#ef4444',Плёнка:'#f59e0b',Расходники:'#28c76f',Инструмент:'#f97316',Прочее:'#8a8a92'};
 
-/* Helpers */
-function fmtDate(d) { if (!d) return ''; return new Date(d).toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric' }); }
-function fmtDateTime(d) { if (!d) return ''; return new Date(d).toLocaleDateString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }); }
-function fmtMoney(n) { return Number(n||0).toLocaleString('ru-RU')+' ₸'; }
-function dirLabel(d) { return DIR_MAP[d]||d; }
-function statusLabel(s) { return { paid:'Оплачено', unpaid:'Не оплачено', partial:'Частично' }[s]||s; }
-function columnLabel(c) { const col = COLUMNS.find(x => x.id === c); return col ? col.label : c; }
-function getActiveDirections() {
-  const active = [];
-  document.querySelectorAll('.direction-toggle.on').forEach(t => active.push(t.dataset.dir));
-  return active;
-}
+let allOrders = [], allMats = [], allTpls = [], tplMatRows = [], currentPage = 'orders';
 
-/* DB Helper */
-const DB = {
-  async orders(filters = {}) {
-    try {
-      let q = sb.from('orders').select('*').eq('trashed', false).order('id', { ascending: false });
-      const dirs = getActiveDirections();
-      if (dirs.length < 3 && dirs.length > 0) q = q.in('direction', dirs);
-      if (filters.search) q = q.or(`client.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-      if (filters.limit) q = q.limit(filters.limit);
-      const { data, error } = await q;
-      if (error) { console.error(error); return []; }
-      return data || [];
-    } catch(e) { console.error(e); return []; }
+function esc(s){return s?s.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+function fd(d){if(!d)return'';return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric'})}
+function fdt(d){if(!d)return'';return new Date(d).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+function fm(n){return Number(n||0).toLocaleString('ru-RU')+' ₸'}
+function dl(d){return DIR[d]||d}
+function pl(s){return PAY[s]||s}
+function cl(s){const c=COL.find(x=>x.id===s);return c?c.l:s}
+function catColor(c){return CAT_COLORS[c]||'var(--text-dim)'}
+
+/* DB */
+const DB={
+  async orders(f={}){
+    try{
+      let q=sb.from('orders').select('*').eq('trashed',false).order('id',{ascending:false});
+      if(f.search)q=q.or(`client.ilike.%${f.search}%,description.ilike.%${f.search}%`);
+      if(f.limit)q=q.limit(f.limit);
+      const{data,error}=await q;
+      if(error){console.error(error);return[]}
+      return data||[]
+    }catch(e){console.error(e);return[]}
   },
-  async trashed() {
-    const { data } = await sb.from('orders').select('*').eq('trashed', true).order('deleted_at', { ascending: false });
-    return data || [];
-  },
-  async createOrder(o) {
-    const { data, error } = await sb.from('orders').insert([{
-      date: o.date || new Date().toISOString().slice(0,10),
-      client: o.client, phone: o.phone || null,
-      description: o.description || null,
-      direction: o.direction, total_amount: Number(o.total_amount||0),
-      material_cost: Number(o.material_cost||0), delivery_cost: Number(o.delivery_cost||0),
-      payment_status: o.payment_status||'unpaid', status: o.status||'incoming',
-      deadline: o.deadline||null, source: 'manual'
+  async createOrder(o){
+    const{data,error}=await sb.from('orders').insert([{
+      date:o.date||new Date().toISOString().slice(0,10),client:o.client,phone:o.phone||null,
+      description:o.description||null,direction:o.direction,
+      total_amount:Number(o.total_amount||0),material_cost:Number(o.material_cost||0),
+      delivery_cost:Number(o.delivery_cost||0),payment_status:o.payment_status||'unpaid',
+      status:o.status||'incoming',deadline:o.deadline||null,source:'manual'
     }]).select();
-    if (!error && data) return data[0]; return null;
+    return(!error&&data)?data[0]:null
   },
-  async updateOrder(id, updates) { await sb.from('orders').update(updates).eq('id',id); },
-  async trashOrder(id) { await sb.from('orders').update({ trashed:true, deleted_at: new Date().toISOString() }).eq('id',id); },
-  async restoreOrder(id) { await sb.from('orders').update({ trashed:false, deleted_at:null }).eq('id',id); },
-  async deleteOrderPermanently(id) { await sb.from('orders').delete().eq('id',id); },
-  async templates() {
-    const { data } = await sb.from('templates').select('*').order('id'); return data||[];
-  },
-  async createTemplate(t) {
-    const { data, error } = await sb.from('templates').insert([t]).select();
-    if (!error && data) return data[0]; return null;
-  },
-  async updateTemplate(id, updates) { await sb.from('templates').update(updates).eq('id',id); },
-  async deleteTemplate(id) { await sb.from('templates').delete().eq('id',id); },
-  async materials() {
-    const { data } = await sb.from('materials').select('*').order('id'); return data||[];
-  },
-  async logAudit(type, subject, detail) {
-    await sb.from('audit_log').insert([{ type, subject, detail }]);
-  },
-  async getAuditLog() {
-    const { data } = await sb.from('audit_log').select('*').order('created_at', { ascending: false }).limit(200); return data||[];
-  }
-};
+  async updateOrder(id,u){await sb.from('orders').update(u).eq('id',id)},
+  async trashOrder(id){await sb.from('orders').update({trashed:true,deleted_at:new Date().toISOString()}).eq('id',id)},
+  async restoreOrder(id){await sb.from('orders').update({trashed:false,deleted_at:null}).eq('id',id)},
+  async getTemplates(){const{data}=await sb.from('templates').select('*').order('id');return data||[]},
+  async createTemplate(t){const{data,error}=await sb.from('templates').insert([t]).select();return(!error&&data)?data[0]:null},
+  async updateTemplate(id,u){await sb.from('templates').update(u).eq('id',id)},
+  async deleteTemplate(id){await sb.from('templates').delete().eq('id',id)},
+  async getMaterials(){const{data}=await sb.from('materials').select('*').order('id');return data||[]},
+  async logAudit(t,s,d){await sb.from('audit_log').insert([{type:t,subject:s,detail:d}])},
+  async getAuditLog(){const{data}=await sb.from('audit_log').select('*').order('created_at',{ascending:false}).limit(200);return data||[]}
+}
 
 /* ========== NAVIGATION ========== */
-async function navigateTo(pageId) {
-  document.querySelectorAll('.page-container').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const page = document.getElementById(pageId);
-  if (page) page.classList.add('active');
-  const nav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
-  if (nav) nav.classList.add('active');
-  const titles = {
-    'orders-page':['Заказы','Реестр всех заказов'],
-    'calendar-page':['Календарь','Заказы по датам'],
-    'finance-page':['Финансы','Выручка, расходы, аналитика'],
-    'clients-page':['Клиенты','История заказов'],
-    'materials-page':['Склад','Учёт материалов'],
-    'templates-page':['Шаблоны','Быстрое создание'],
-    'archive-page':['Корзина','Удалённые'],
-    'history-page':['История','Изменения']
-  };
-  const [title, sub] = titles[pageId]||['',''];
-  document.getElementById('topbarTitle').textContent = title;
-  document.getElementById('topbarSubtitle').textContent = sub;
-
-  // Load page-specific data
-  if (pageId === 'orders-page') { loadOrders(); }
-  else if (pageId === 'calendar-page') renderCalendar();
-  else if (pageId === 'finance-page') { await populateFinYear(); renderFinance(); }
-  else if (pageId === 'clients-page') renderClients();
-  else if (pageId === 'materials-page') renderMaterials();
-  else if (pageId === 'templates-page') renderTemplates();
-  else if (pageId === 'archive-page') renderArchive();
-  else if (pageId === 'history-page') renderHistory();
-}
-
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => { const p = item.dataset.page; if (p) navigateTo(p); });
+document.querySelectorAll('.nav-item').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const p=el.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.page').forEach(pa=>pa.classList.remove('active'));
+    document.getElementById('page-'+p).classList.add('active');
+    currentPage=p;
+    document.getElementById('searchInput').value='';
+    renderPage();
+  })
 });
 
-/* ========== DIRECTION TOGGLES ========== */
-document.getElementById('dirToggles').addEventListener('click', async (e) => {
-  const toggle = e.target.closest('.direction-toggle');
-  if (!toggle) return;
-  toggle.classList.toggle('on');
-  await renderTable();
-});
-
-/* ========== NOTIFICATIONS ========== */
-async function toggleNotifications(e) {
-  e.stopPropagation();
-  const dd = document.getElementById('notifDropdown');
-  dd.classList.toggle('open');
-  if (!dd.classList.contains('open')) return;
-  const list = document.getElementById('notifList');
-  list.innerHTML = '<div class="notif-item"><em>Загрузка...</em></div>';
-  const items = [];
-  const all = await DB.orders();
-  const mats = await DB.materials();
-  const overdue = all.filter(o => o.deadline && new Date(o.deadline) < new Date() && !['completed','done','canceled'].includes(o.status));
-  overdue.slice(0,5).forEach(o => items.push({ text:`Просрочен заказ #${o.id} (${o.client})`, time: fmtDate(o.deadline) }));
-  const criticalMats = mats.filter(m => m.quantity <= m.min_level);
-  criticalMats.slice(0,5).forEach(m => items.push({ text:`Малый запас: ${m.name} — ${m.quantity} ${m.unit}`, time:'Склад' }));
-  const unpaid = all.filter(o => o.payment_status === 'unpaid' && o.total_amount > 0);
-  unpaid.slice(0,5).forEach(o => items.push({ text:`Не оплачен #${o.id} (${o.client}) на ${fmtMoney(o.total_amount)}`, time:'Финансы' }));
-  list.innerHTML = items.length
-    ? items.map(i => `<div class="notif-item"><div>${i.text}</div><div class="notif-time">${i.time}</div></div>`).join('')
-    : '<div class="notif-item"><div>Всё хорошо</div></div>';
-}
-document.addEventListener('click', () => document.getElementById('notifDropdown').classList.remove('open'));
-
-/* ========== MAIN TABLE ========== */
-async function loadOrders() {
-  allOrdersCache = await DB.orders();
-  await populateYearFilter();
-  await renderTable();
+function renderPage(){
+  const titles={orders:['Заказы','Реестр всех заказов'],warehouse:['Склад','Учёт материалов'],
+    clients:['Клиенты','История и LTV'],templates:['Шаблоны','Быстрое создание']};
+  const[t,sub]=titles[currentPage]||['',''];
+  document.getElementById('pageTitle').textContent=t;
+  document.getElementById('pageSub').textContent=sub;
+  if(currentPage==='orders')renderOrders();
+  else if(currentPage==='warehouse')renderWarehouse();
+  else if(currentPage==='clients')renderClients();
+  else if(currentPage==='templates')renderTemplates();
 }
 
-async function renderTable() {
-  const searchQ = (document.getElementById('searchInput').value||'').trim().toLowerCase();
-  const dirF = document.getElementById('filterDirection').value;
-  const payF = document.getElementById('filterPayment').value;
-  const yearF = document.getElementById('filterYear').value;
-  const dateFrom = document.getElementById('filterDateFrom').value;
-  const dateTo = document.getElementById('filterDateTo').value;
-
-  let filtered = allOrdersCache;
-  if (dirF !== 'all') filtered = filtered.filter(o => o.direction === dirF);
-  if (payF !== 'all') filtered = filtered.filter(o => o.payment_status === payF);
-  if (yearF !== 'all') filtered = filtered.filter(o => o.date && o.date.startsWith(yearF));
-  if (dateFrom) filtered = filtered.filter(o => o.date && o.date >= dateFrom);
-  if (dateTo) filtered = filtered.filter(o => o.date && o.date <= dateTo);
-  if (searchQ) filtered = filtered.filter(o => (o.client||'').toLowerCase().includes(searchQ) || (o.description||'').toLowerCase().includes(searchQ));
-
-  document.getElementById('filterCount').textContent = `Показано: ${filtered.length}`;
-
-  const body = document.getElementById('ordersBody');
-  body.innerHTML = filtered.map(o => {
-    const cost = Number(o.material_cost||0) + Number(o.delivery_cost||0);
-    const profit = Number(o.total_amount||0) - cost;
-    const profitClass = profit >= 0 ? 'text-green' : 'text-red';
-    const isOverdue = o.deadline && new Date(o.deadline) < new Date() && !['completed','done','canceled'].includes(o.status);
+/* ========== ORDERS ========== */
+async function renderOrders(){
+  if(!allOrders.length)allOrders=await DB.orders();
+  const sq=(document.getElementById('searchInput').value||'').trim().toLowerCase();
+  const dir=document.getElementById('fDir').value;
+  const pay=document.getElementById('fPay').value;
+  const yr=document.getElementById('fYear').value;
+  const df=document.getElementById('fDateFrom').value;
+  const dt=document.getElementById('fDateTo').value;
+  let f=allOrders;
+  if(dir!='all')f=f.filter(o=>o.direction===dir);
+  if(pay!='all')f=f.filter(o=>o.payment_status===pay);
+  if(yr!='all')f=f.filter(o=>o.date&&o.date.startsWith(yr));
+  if(df)f=f.filter(o=>o.date&&o.date>=df);
+  if(dt)f=f.filter(o=>o.date&&o.date<=dt);
+  if(sq)f=f.filter(o=>(o.client||'').toLowerCase().includes(sq)||(o.description||'').toLowerCase().includes(sq));
+  document.getElementById('filterCount').textContent='Показано: '+f.length;
+  const rev=f.reduce((s,o)=>s+Number(o.total_amount||0),0);
+  const cost=f.reduce((s,o)=>s+Number(o.material_cost||0)+Number(o.delivery_cost||0),0);
+  const profit=rev-cost;
+  const margin=rev>0?profit/rev*100:0;
+  document.getElementById('mRevenue').textContent=fm(rev);
+  document.getElementById('mCost').textContent=fm(cost);
+  const mp=document.getElementById('mProfit');mp.textContent=fm(profit);mp.style.color=profit>=0?'var(--green)':'var(--danger)';
+  const mm=document.getElementById('mMargin');mm.textContent=margin.toFixed(1)+'%';mm.style.color=profit>=0?'var(--green)':'var(--danger)';
+  const b=document.getElementById('ordersBody');
+  b.innerHTML=f.map(o=>{
+    const cst=Number(o.material_cost||0)+Number(o.delivery_cost||0);
+    const pr=Number(o.total_amount||0)-cst;
+    const ov=o.deadline&&new Date(o.deadline)<new Date()&&!['completed','done','canceled'].includes(o.status);
     return `<tr>
-      <td style="white-space:nowrap"><span style="font-weight:600;color:var(--text)">#${o.id}</span><br><span style="font-size:11px;color:var(--text-dim)">${fmtDate(o.date)}</span></td>
-      <td><div class="client-name">${esc(o.client)}</div><div class="client-phone">${o.phone||''}</div></td>
-      <td><span class="badge badge-${o.direction}">${dirLabel(o.direction)}</span></td>
-      <td><span class="badge badge-${o.payment_status}">${statusLabel(o.payment_status)}</span></td>
-      <td style="font-weight:600;color:var(--text)">${fmtMoney(o.total_amount)}</td>
-      <td>${fmtMoney(cost)}</td>
-      <td class="${profitClass}" style="font-weight:600">${fmtMoney(profit)}</td>
-      <td style="white-space:nowrap">
-        <span class="badge ${isOverdue?'badge-overdue':'badge-ok'}">${columnLabel(o.status)}</span>
-        ${o.deadline ? `<br><span style="font-size:10px;color:${isOverdue?'var(--danger)':'var(--text-dim)'}">${isOverdue?'⚠️ ':'📅 '}${fmtDate(o.deadline)}</span>` : ''}
-      </td>
-      <td style="white-space:nowrap">
-        <button class="action-btn" onclick="openDetailModal(${o.id})" title="Подробнее">👁</button>
-        <button class="action-btn" onclick="openOrderModal(${o.id})" title="Редактировать">✎</button>
-        <button class="action-btn" onclick="deleteOrder(${o.id})" title="Удалить">✕</button>
-      </td>
-    </tr>`;
+      <td style="white-space:nowrap"><span style="font-weight:600;color:var(--text)">#${o.id}</span><br><span style="font-size:11px;color:var(--text-dim)">${fd(o.date)}</span></td>
+      <td><div class="cl-name">${esc(o.client)}</div><div class="cl-phone">${o.phone||''}</div></td>
+      <td><span class="badge badge-${o.direction}">${dl(o.direction)}</span></td>
+      <td><span class="badge badge-${o.payment_status}">${pl(o.payment_status)}</span></td>
+      <td style="font-weight:600;color:var(--text)">${fm(o.total_amount)}</td>
+      <td>${fm(cst)}</td>
+      <td style="font-weight:600;color:${pr>=0?'var(--green)':'var(--danger)'}">${fm(pr)}</td>
+      <td style="white-space:nowrap"><span class="badge ${ov?'badge-critical':'badge-ok'}">${cl(o.status)}</span>${o.deadline?`<br><span style="font-size:10px;color:${ov?'var(--danger)':'var(--text-dim)'}">${ov?'⚠️ ':'📅 '}${fd(o.deadline)}</span>`:''}</td>
+      <td style="white-space:nowrap"><button class="act" onclick="openDetail(${o.id})" title="Подробнее">👁</button><button class="act" onclick="openOrderModal(${o.id})" title="Редактировать">✎</button><button class="act" onclick="delOrder(${o.id})" title="Удалить">✕</button></td>
+    </tr>`
   }).join('');
-
-  updateDashCards(filtered);
 }
 
-function esc(s) { if (!s) return ''; return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-function updateDashCards(orders) {
-  const revenue = orders.reduce((s,o) => s + Number(o.total_amount||0), 0);
-  const cost = orders.reduce((s,o) => s + Number(o.material_cost||0) + Number(o.delivery_cost||0), 0);
-  const profit = revenue - cost;
-  const margin = revenue > 0 ? (profit / revenue * 100) : 0;
-  document.getElementById('dashRevenue').textContent = fmtMoney(revenue);
-  document.getElementById('dashCost').textContent = fmtMoney(cost);
-  document.getElementById('dashProfit').textContent = fmtMoney(profit);
-  document.getElementById('dashProfit').style.color = profit >= 0 ? 'var(--green)' : 'var(--danger)';
-  document.getElementById('dashMargin').textContent = margin.toFixed(1)+'%';
-  document.getElementById('dashMargin').style.color = margin >= 0 ? 'var(--green)' : 'var(--danger)';
-}
-
-async function populateYearFilter() {
-  try {
-    const { data } = await sb.from('orders').select('date');
-    const years = new Set();
-    (data||[]).forEach(o => { if (o.date && o.date.length>=4) years.add(o.date.slice(0,4)); });
-    const sorted = [...years].sort().reverse();
-    ['filterYear','finYear'].forEach(id => {
-      const sel = document.getElementById(id);
-      if (!sel) return;
-      const cur = sel.value;
-      sel.innerHTML = '<option value="all">Все года</option>';
-      sorted.forEach(y => sel.innerHTML += `<option value="${y}">${y}</option>`);
-      sel.value = cur;
-    });
-  } catch(e) { console.error(e); }
-}
-async function populateFinYear() {
-  try {
-    const { data } = await sb.from('orders').select('date');
-    const years = new Set();
-    (data||[]).forEach(o => { if (o.date && o.date.length>=4) years.add(o.date.slice(0,4)); });
-    const sel = document.getElementById('finYear');
-    const cur = sel.value;
-    sel.innerHTML = '<option value="all">Все года</option>';
-    [...years].sort().reverse().forEach(y => sel.innerHTML += `<option value="${y}">${y}</option>`);
-    sel.value = cur;
-  } catch(e) {}
-}
-
-function clearFilters() {
-  ['filterDirection','filterPayment','filterYear'].forEach(id => document.getElementById(id).value='all');
-  document.getElementById('filterDateFrom').value='';
-  document.getElementById('filterDateTo').value='';
-  document.getElementById('searchInput').value='';
-  renderTable();
-}
-
-async function deleteOrder(id) {
-  if (!confirm('Удалить заказ #'+id+'?')) return;
+async function delOrder(id){
+  if(!confirm('Удалить заказ #'+id+'?'))return;
   await DB.trashOrder(id);
-  await DB.logAudit('delete','Заказ #'+id,`Удалён заказ #${id}`);
-  await loadOrders();
+  await DB.logAudit('delete','Заказ #'+id,'Удалён заказ #'+id);
+  allOrders=await DB.orders();renderOrders();
 }
 
-/* ========== ORDER MODAL ========== */
-async function openOrderModal(id) {
-  const modal = document.getElementById('orderModal');
-  modal.classList.add('open');
-  const title = document.getElementById('orderModalTitle');
-  title.textContent = id ? 'Редактировать заказ' : 'Новый заказ';
-  document.getElementById('orderModalSaveBtn').textContent = id ? 'Сохранить' : 'Создать заказ';
-  document.getElementById('fEditId').value = id||'';
-  document.getElementById('costCalcSection').style.display = 'none';
+/* ========== WAREHOUSE ========== */
 
-  // Reset
-  ['fClient','fPhone','fAmount','fDelivery','fCostInput','fCostData'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('fDesc').value='';
-  document.getElementById('fDirection').value='tipografia';
-  document.getElementById('fPayStatus').value='unpaid';
-  document.getElementById('fColumn').value='incoming';
-  document.getElementById('fDeadline').value='';
-
-  if (id) {
-    const { data: o, error } = await sb.from('orders').select('*').eq('id',id).single();
-    if (o) {
-      document.getElementById('fClient').value = o.client;
-      document.getElementById('fPhone').value = o.phone||'';
-      document.getElementById('fDesc').value = o.description||'';
-      document.getElementById('fDirection').value = o.direction;
-      document.getElementById('fAmount').value = o.total_amount;
-      document.getElementById('fDelivery').value = o.delivery_cost||'';
-      document.getElementById('fCostInput').value = (Number(o.material_cost||0) + Number(o.delivery_cost||0))||'';
-      document.getElementById('fPayStatus').value = o.payment_status;
-      document.getElementById('fColumn').value = o.status;
-      document.getElementById('fDeadline').value = o.deadline||'';
-    }
-  }
-
-  // Load templates
-  allTemplatesCache = await DB.templates();
-  const sel = document.getElementById('fTemplate');
-  sel.innerHTML = '<option value="">— Без шаблона —</option>';
-  allTemplatesCache.forEach(t => sel.innerHTML += `<option value="${t.id}">${esc(t.name)}</option>`);
-}
-
-function closeOrderModal() { document.getElementById('orderModal').classList.remove('open'); }
-
-async function applyTemplateCalc() {
-  const tplId = parseInt(document.getElementById('fTemplate').value);
-  const section = document.getElementById('costCalcSection');
-  if (!tplId) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  const tpl = allTemplatesCache.find(t => t.id === tplId);
-  if (!tpl) return;
-
-  // Try to get materials from template (stored as JSON in description or from template_materials table)
-  let materials = [];
+/*
+ * ВАЖНО: Сюда подставляются данные по складским остаткам из таблицы Google Диска
+ * Ссылка: https://drive.google.com/drive/u/0/folders/1NuMe9ReRVp496sDet5Q6qm6jF9uBNUl8
+ *
+ * Чтобы интегрировать Google Sheets, используйте Google Sheets API:
+ * 1. Создайте сервисный аккаунт в Google Cloud Console
+ * 2. Включите Google Sheets API
+ * 3. Сделайте таблицу доступной для сервисного аккаунта
+ * 4. Используйте fetch() для получения данных в формате JSON
+ *
+ * Пример кода для загрузки данных из Google Sheets:
+ */
+async function loadWarehouseFromGoogleDrive() {
+  // Раскомментируйте и настройте после получения доступа к Google Sheets API
+  /*
+  const SHEET_ID = 'ВАШ_SHEET_ID';
+  const API_KEY = 'ВАШ_API_KEY';
+  const range = 'Склад!A:G';
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
   try {
-    const { data: mats } = await sb.from('template_materials').select('*').eq('template_id', tplId);
-    if (mats && mats.length) materials = mats;
-  } catch(e) {}
-  // Fallback: parse from description
-  if (!materials.length && tpl.description && tpl.description.startsWith('[')) {
-    try { materials = JSON.parse(tpl.description); } catch(e) {}
-  }
-
-  const list = document.getElementById('templateMaterialsList');
-  if (materials.length) {
-    list.innerHTML = materials.map((m,i) => `<div class="mat-row">
-      <span class="mat-name">${esc(m.name)}</span>
-      <span style="color:var(--text-dim)">${m.price} ₸/${m.unit||'шт'}</span>
-      <span style="color:var(--text-dim)">× ${m.per_run||1} на ед.</span>
-    </div>`).join('');
-    document.getElementById('fCostData').value = JSON.stringify(materials);
-  } else {
-    list.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Нет материалов для расчёта. Добавьте материалы в шаблоне.</div>';
-    document.getElementById('fCostData').value = '[]';
-  }
-  document.getElementById('fDirection').value = tpl.direction;
-  document.getElementById('fAmount').value = tpl.amount||'';
-  document.getElementById('fRunQty').value = 1;
-  document.getElementById('fMarkup').value = 30;
-  calcCost();
-}
-
-function calcCost() {
-  const raw = document.getElementById('fCostData').value;
-  const mats = raw ? JSON.parse(raw) : [];
-  const qty = parseInt(document.getElementById('fRunQty').value) || 1;
-  const markup = parseInt(document.getElementById('fMarkup').value) || 30;
-  let totalCost = 0;
-  mats.forEach(m => { totalCost += (Number(m.price||0) * Number(m.per_run||1)) * qty; });
-  const recPrice = totalCost * (1 + markup / 100);
-  const profit = recPrice - totalCost;
-  document.getElementById('calcCostVal').textContent = fmtMoney(totalCost);
-  document.getElementById('calcRecPrice').textContent = fmtMoney(recPrice);
-  document.getElementById('calcProfitVal').textContent = fmtMoney(profit);
-  document.getElementById('fCostInput').value = totalCost;
-  if (!document.getElementById('fEditId').value) {
-    document.getElementById('fAmount').value = Math.round(recPrice);
-  }
-}
-function manualAmountEdit() { /* user typed manually */ }
-function manualCostEdit() { /* user typed manually */ }
-
-async function saveOrder() {
-  const id = parseInt(document.getElementById('fEditId').value);
-  const client = document.getElementById('fClient').value.trim();
-  if (!client) { alert('Введите имя клиента'); return; }
-  const totalAmt = parseFloat(document.getElementById('fAmount').value) || 0;
-  const costInput = parseFloat(document.getElementById('fCostInput').value) || 0;
-  const delivery = parseFloat(document.getElementById('fDelivery').value) || 0;
-  const materialCost = costInput - delivery;
-
-  const data = {
-    client, phone: document.getElementById('fPhone').value.trim()||null,
-    description: document.getElementById('fDesc').value.trim()||null,
-    direction: document.getElementById('fDirection').value,
-    total_amount: totalAmt,
-    material_cost: Math.max(0, materialCost),
-    delivery_cost: delivery,
-    payment_status: document.getElementById('fPayStatus').value,
-    status: document.getElementById('fColumn').value,
-    deadline: document.getElementById('fDeadline').value||null,
-    date: new Date().toISOString().slice(0,10)
-  };
-  if (id) {
-    await DB.updateOrder(id, data);
-    await DB.logAudit('edit', data.client, `Изменён заказ #${id}`);
-  } else {
-    const created = await DB.createOrder(data);
-    if (created) await DB.logAudit('create', data.client, `Создан заказ #${created.id}`);
-  }
-  closeOrderModal();
-  await loadOrders();
-}
-
-/* ========== DETAIL MODAL ========== */
-async function openDetailModal(id) {
-  window._detailOrderId = id;
-  const modal = document.getElementById('detailModal');
-  modal.classList.add('open');
-  document.getElementById('detailModalTitle').textContent = `Заказ #${id}`;
-  const { data: o } = await sb.from('orders').select('*').eq('id',id).single();
-  if (!o) return;
-  document.getElementById('detailClient').textContent = o.client;
-  document.getElementById('detailPhone').textContent = o.phone||'—';
-  document.getElementById('detailDirection').innerHTML = `<span class="badge badge-${o.direction}">${dirLabel(o.direction)}</span>`;
-  document.getElementById('detailAmount').textContent = fmtMoney(o.total_amount);
-  const payEl = document.getElementById('detailPayment');
-  payEl.textContent = statusLabel(o.payment_status);
-  payEl.style.color = o.payment_status === 'paid' ? 'var(--green)' : o.payment_status === 'unpaid' ? 'var(--danger)' : 'var(--yellow)';
-  document.getElementById('detailStatus').textContent = columnLabel(o.status);
-  document.getElementById('detailDate').textContent = fmtDate(o.date)||'—';
-  document.getElementById('detailDeadline').textContent = o.deadline ? fmtDate(o.deadline) : '—';
-  const cost = Number(o.material_cost||0) + Number(o.delivery_cost||0);
-  const profit = Number(o.total_amount||0) - cost;
-  document.getElementById('detailCost').textContent = fmtMoney(cost);
-  const profitEl = document.getElementById('detailProfit');
-  profitEl.textContent = fmtMoney(profit);
-  profitEl.style.color = profit >= 0 ? 'var(--green)' : 'var(--danger)';
-  document.getElementById('detailDesc').textContent = o.description||'—';
-  const { data: logs } = await sb.from('audit_log').select('*').ilike('detail',`%#${id}%`).order('created_at',{ascending:false}).limit(20);
-  const hist = document.getElementById('detailHistory');
-  if (logs && logs.length) {
-    hist.innerHTML = logs.map(l => `<div class="detail-history-item"><div class="detail-history-time">${fmtDateTime(l.created_at)}</div><div class="detail-history-text">${esc(l.detail)}</div></div>`).join('');
-  } else {
-    hist.innerHTML = '<div style="font-size:12px;color:var(--text-dim)">Нет истории</div>';
-  }
-}
-function closeDetailModal() { document.getElementById('detailModal').classList.remove('open'); }
-function editFromDetail() { closeDetailModal(); openOrderModal(window._detailOrderId); }
-
-/* ========== TEMPLATES ========== */
-let tplMaterialRows = [];
-async function renderTemplates() {
-  const grid = document.getElementById('tplGrid');
-  const tpls = await DB.templates();
-  grid.innerHTML = '';
-  tpls.forEach(t => {
-    const card = document.createElement('div');
-    card.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;';
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <span style="font-weight:600">${esc(t.name)}</span>
-        <span class="badge badge-${t.direction}">${dirLabel(t.direction)}</span>
-      </div>
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">${esc(t.description||'')}</div>
-      <div style="font-size:14px;font-weight:700">${fmtMoney(t.amount)}</div>
-      <div style="display:flex;gap:6px;margin-top:10px">
-        <button class="btn btn-ghost btn-sm" onclick="useTemplate(${t.id})">Использовать</button>
-        <button class="btn btn-ghost btn-sm" onclick="editTemplate(${t.id})">Ред.</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteTemplate(${t.id})">Удал.</button>
-      </div>`;
-    grid.appendChild(card);
-  });
-}
-
-async function openTemplateModal(id) {
-  const modal = document.getElementById('templateModal');
-  modal.classList.add('open');
-  document.getElementById('tplEditId').value = id||'';
-  tplMaterialRows = [];
-  if (id) {
-    const { data: t } = await sb.from('templates').select('*').eq('id',id).single();
-    if (!t) return;
-    document.getElementById('tplModalTitle').textContent = 'Редактировать шаблон';
-    document.getElementById('tplName').value = t.name;
-    document.getElementById('tplDirection').value = t.direction;
-    document.getElementById('tplAmount').value = t.amount;
-    document.getElementById('tplDesc').value = t.description||'';
-    // Load materials
-    const { data: mats } = await sb.from('template_materials').select('*').eq('template_id',id);
-    if (mats && mats.length) {
-      tplMaterialRows = mats.map(m => ({ name:m.name, unit:m.unit||'шт', price:m.price, perRun:m.per_run||1 }));
-    } else if (t.description && t.description.startsWith('[')) {
-      try { tplMaterialRows = JSON.parse(t.description); } catch(e) {}
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.values) {
+      for (const row of data.values) {
+        await sb.from('materials').upsert({
+          name: row[0], category: row[1]||'Прочее', unit: row[2]||'шт',
+          quantity: parseFloat(row[3])||0, min_level: parseFloat(row[4])||0,
+          purchase_price: parseFloat(row[5])||0, direction: 'tipografia'
+        }, { onConflict: 'name' });
+      }
+      allMats = await DB.getMaterials();
+      renderWarehouse();
     }
-  } else {
-    document.getElementById('tplModalTitle').textContent = 'Новый шаблон';
-    ['tplName','tplAmount','tplDesc'].forEach(id => document.getElementById(id).value='');
-    document.getElementById('tplDirection').value = 'tipografia';
-  }
-  renderTemplateMaterials();
-}
-function closeTemplateModal() { document.getElementById('templateModal').classList.remove('open'); }
-function addTemplateMaterial() {
-  tplMaterialRows.push({ name:'', unit:'шт', price:0, perRun:1 });
-  renderTemplateMaterials();
-}
-function renderTemplateMaterials() {
-  const list = document.getElementById('tplMaterialsList');
-  list.innerHTML = tplMaterialRows.map((m,i) => `<div class="mat-row">
-    <input style="width:100px" value="${esc(m.name)}" onchange="tplMaterialRows[${i}].name=this.value" placeholder="Материал">
-    <input style="width:40px" value="${m.price}" onchange="tplMaterialRows[${i}].price=Number(this.value)" placeholder="Цена">
-    <span style="font-size:11px;color:var(--text-dim)">₸/</span>
-    <input style="width:36px" value="${m.unit}" onchange="tplMaterialRows[${i}].unit=this.value" placeholder="шт">
-    <span style="font-size:11px;color:var(--text-dim)">×</span>
-    <input style="width:40px" value="${m.perRun}" onchange="tplMaterialRows[${i}].perRun=Number(this.value)" placeholder="1">
-    <span style="font-size:11px;color:var(--text-dim)">на ед.</span>
-    <button class="action-btn" onclick="tplMaterialRows.splice(${i},1);renderTemplateMaterials()" title="Удалить">✕</button>
-  </div>`).join('');
-}
-async function saveTemplate() {
-  const id = parseInt(document.getElementById('tplEditId').value);
-  const name = document.getElementById('tplName').value.trim();
-  if (!name) { alert('Введите название'); return; }
-  const data = {
-    name,
-    direction: document.getElementById('tplDirection').value,
-    amount: parseFloat(document.getElementById('tplAmount').value)||0,
-    description: document.getElementById('tplDesc').value.trim()||''
-  };
-  if (id) {
-    await DB.updateTemplate(id, data);
-    // Save materials
-    if (tplMaterialRows.length) {
-      try {
-        await sb.from('template_materials').delete().eq('template_id',id);
-        await sb.from('template_materials').insert(tplMaterialRows.map(m => ({ template_id:id, name:m.name, unit:m.unit, price:m.price, per_run:m.perRun })));
-      } catch(e) { console.log('template_materials table may not exist:', e); }
-    }
-    await DB.logAudit('edit', name, `Изменён шаблон #${id}`);
-  } else {
-    const created = await DB.createTemplate(data);
-    if (created && tplMaterialRows.length) {
-      try {
-        await sb.from('template_materials').insert(tplMaterialRows.map(m => ({ template_id:created.id, name:m.name, unit:m.unit, price:m.price, per_run:m.perRun })));
-      } catch(e) { console.log('template_materials table may not exist:', e); }
-    }
-    if (created) await DB.logAudit('create', name, `Создан шаблон #${created.id}`);
-  }
-  closeTemplateModal();
-  navigateTo('templates-page');
-}
-async function useTemplate(id) {
-  const tpl = (await DB.templates()).find(t => t.id === id);
-  if (!tpl) return;
-  navigateTo('orders-page');
-  openOrderModal();
-  document.getElementById('fTemplate').value = id;
-  await applyTemplateCalc();
-}
-function editTemplate(id) { openTemplateModal(id); }
-async function deleteTemplate(id) {
-  if (!confirm('Удалить шаблон?')) return;
-  const { data: t } = await sb.from('templates').select('name').eq('id',id).single();
-  await DB.deleteTemplate(id);
-  if (t) await DB.logAudit('delete', t.name, `Удалён шаблон #${id}`);
-  navigateTo('templates-page');
+  } catch(e) { console.error('Google Sheets sync error:', e); }
+  */
 }
 
-/* ========== CALENDAR ========== */
-async function renderCalendar() {
-  const grid = document.getElementById('calGrid');
-  const year = calCurrentDate.getFullYear();
-  const month = calCurrentDate.getMonth();
-  document.getElementById('calMonthTitle').textContent = `${MONTHS_RU[month]} ${year}`;
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startPad = (firstDay.getDay() + 6) % 7;
-  const totalDays = lastDay.getDate();
-  const today = new Date();
-  grid.innerHTML = '';
-  for (let i = 0; i < startPad; i++) { const d = document.createElement('div'); d.style.cssText = 'background:var(--bg);padding:8px;min-height:60px'; grid.appendChild(d); }
-  const orders = await DB.orders();
-  for (let day = 1; day <= totalDays; day++) {
-    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const div = document.createElement('div');
-    div.style.cssText = 'background:var(--bg3);padding:8px;min-height:60px;font-size:12px';
-    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) div.style.background = 'var(--bg4)';
-    const num = document.createElement('div');
-    num.style.cssText = 'font-weight:600;margin-bottom:4px';
-    num.textContent = day;
-    div.appendChild(num);
-    const events = orders.filter(o => o.date && o.date.startsWith(dateStr));
-    events.slice(0,3).forEach(e => {
-      const pill = document.createElement('div');
-      pill.style.cssText = `font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(108,92,231,.15);color:var(--primary)`;
-      pill.textContent = `${e.client} — ${fmtMoney(e.total_amount)}`;
-      pill.onclick = () => openDetailModal(e.id);
-      div.appendChild(pill);
-    });
-    if (events.length > 3) { const more = document.createElement('div'); more.style.cssText = 'font-size:9px;color:var(--text-dim)'; more.textContent = `+${events.length-3}`; div.appendChild(more); }
-    grid.appendChild(div);
-  }
-  const remaining = (7 - ((startPad + totalDays) % 7)) % 7;
-  for (let i = 0; i < remaining; i++) { const d = document.createElement('div'); d.style.cssText = 'background:var(--bg);padding:8px;min-height:60px'; grid.appendChild(d); }
-}
-document.getElementById('calPrevBtn').addEventListener('click', () => { calCurrentDate.setMonth(calCurrentDate.getMonth()-1); renderCalendar(); });
-document.getElementById('calNextBtn').addEventListener('click', () => { calCurrentDate.setMonth(calCurrentDate.getMonth()+1); renderCalendar(); });
-document.getElementById('calTodayBtn').addEventListener('click', () => { calCurrentDate = new Date(); calCurrentDate.setDate(1); renderCalendar(); });
-
-/* ========== FINANCE ========== */
-async function renderFinance() {
-  const all = allOrdersCache.length ? allOrdersCache : await DB.orders();
-  const dirF = document.getElementById('finDirection').value;
-  const yearF = document.getElementById('finYear').value;
-  const monthF = document.getElementById('finMonth').value;
-  const months = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
-  let filtered = all;
-  if (dirF !== 'all') filtered = filtered.filter(o => o.direction === dirF);
-  if (yearF !== 'all') filtered = filtered.filter(o => o.date && o.date.startsWith(yearF));
-  if (monthF !== 'all') filtered = filtered.filter(o => o.date && parseInt(o.date.split('-')[1]) === parseInt(monthF));
-  const completed = filtered.filter(o => o.status === 'completed');
-  const totalRevenue = completed.reduce((s,o) => s + Number(o.total_amount||0), 0);
-  const debts = filtered.filter(o => o.payment_status === 'unpaid').reduce((s,o) => s + Number(o.total_amount||0), 0);
-  const expenses = filtered.reduce((s,o) => s + Number(o.material_cost||0) + Number(o.delivery_cost||0), 0) || Math.round(totalRevenue*0.35);
-  const profit = totalRevenue - expenses;
-  document.getElementById('finRev').textContent = fmtMoney(totalRevenue);
-  document.getElementById('finExp').textContent = fmtMoney(expenses);
-  document.getElementById('finProfit').textContent = fmtMoney(profit);
-  document.getElementById('finDebt').textContent = fmtMoney(debts);
-  if (chartInstances.revenue) chartInstances.revenue.destroy();
-  if (chartInstances.pnl) chartInstances.pnl.destroy();
-  if (chartInstances.dir) chartInstances.dir.destroy();
-  const revByMonth = Array(12).fill(0);
-  let yearData = all;
-  if (dirF !== 'all') yearData = yearData.filter(o => o.direction === dirF);
-  if (yearF !== 'all') yearData = yearData.filter(o => o.date && o.date.startsWith(yearF));
-  yearData.forEach(o => { if (o.date) { const m = new Date(o.date).getMonth(); if (m>=0 && m<12) revByMonth[m] += Number(o.total_amount||0); } });
-  chartInstances.revenue = new Chart(document.getElementById('revenueChart'), {
-    type:'line',
-    data:{ labels:months, datasets:[{ label:'Выручка', data:revByMonth, borderColor:'#6c5ce7', backgroundColor:'rgba(108,92,231,.1)', fill:true, tension:.3, pointBackgroundColor:'#6c5ce7' }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#8a8a92' } } }, scales:{ x:{ ticks:{ color:'#5a5a62' }, grid:{ color:'#2c2c30' } }, y:{ ticks:{ color:'#5a5a62', callback:v=>(v/1000).toFixed(0)+'k' }, grid:{ color:'#2c2c30' } } } }
+async function renderWarehouse(){
+  allMats = await DB.getMaterials();
+  const sq=(document.getElementById('whSearch').value||'').trim().toLowerCase();
+  const cat=document.getElementById('whCatFilter').value;
+  let f=allMats;
+  if(cat!='all')f=f.filter(m=>(m.category||'Прочее')===cat);
+  if(sq)f=f.filter(m=>(m.name||'').toLowerCase().includes(sq));
+  let n=0,l=0,c=0;
+  f.forEach(m=>{
+    const st=m.quantity>=m.min_level*2?'ok':m.quantity>=m.min_level?'low':'critical';
+    if(st==='ok')n++;else if(st==='low')l++;else c++;
   });
-  const dirRev = { tipografia:0, promotion:0, repair:0 };
-  const dirExp = { tipografia:0, promotion:0, repair:0 };
-  filtered.forEach(o => { const a=Number(o.total_amount||0); if (dirRev.hasOwnProperty(o.direction)) dirRev[o.direction]+=a; const e=Number(o.material_cost||0)+Number(o.delivery_cost||0); if (dirExp.hasOwnProperty(o.direction)) dirExp[o.direction]+=e; });
-  chartInstances.pnl = new Chart(document.getElementById('pnlChart'), {
-    type:'bar',
-    data:{ labels:['Типография','Промоушен','Ремонт'], datasets:[{ label:'Выручка', data:[dirRev.tipografia,dirRev.promotion,dirRev.repair], backgroundColor:'#28c76f' }, { label:'Расходы', data:[dirExp.tipografia,dirExp.promotion,dirExp.repair], backgroundColor:'#ef4444' }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ labels:{ color:'#8a8a92' } } }, scales:{ x:{ ticks:{ color:'#5a5a62' }, grid:{ color:'#2c2c30' } }, y:{ ticks:{ color:'#5a5a62' }, grid:{ color:'#2c2c30' } } } }
-  });
-  const totalDir = dirRev.tipografia+dirRev.promotion+dirRev.repair || 1;
-  chartInstances.dir = new Chart(document.getElementById('directionChart'), {
-    type:'doughnut',
-    data:{ labels:['Типография','Промоушен','Ремонт'], datasets:[{ data:[Math.round(dirRev.tipografia/totalDir*100),Math.round(dirRev.promotion/totalDir*100),Math.round(dirRev.repair/totalDir*100)], backgroundColor:['#28c76f','#3b82f6','#f59e0b'], borderWidth:0 }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ color:'#8a8a92', padding:12 } } }, cutout:'65%' }
-  });
+  document.getElementById('whTotal').textContent=f.length;
+  document.getElementById('whNormal').textContent=n;
+  document.getElementById('whLow').textContent=l;
+  document.getElementById('whCritical').textContent=c;
+  const b=document.getElementById('warehouseBody');
+  b.innerHTML=f.map(m=>{
+    const st=m.quantity>=m.min_level*2?'ok':m.quantity>=m.min_level?'low':'critical';
+    const lb=m.quantity>=m.min_level*2?'Норма':m.quantity>=m.min_level?'Мало':'Требуется закупка';
+    const clr=st==='ok'?'var(--green)':st==='low'?'var(--yellow)':'var(--danger)';
+    const catName=m.category||'Прочее';
+    const totalVal=Number(m.quantity||0)*Number(m.purchase_price||0);
+    return `<tr>
+      <td><span class="cl-name" onclick="openMaterialModal(${m.id})" style="cursor:pointer">${esc(m.name)}</span></td>
+      <td><span class="cat-badge" style="background:${catColor(catName)}22;color:${catColor(catName)}">${esc(catName)}</span></td>
+      <td>${m.unit||'шт'}</td>
+      <td style="font-weight:600;color:${clr}">${m.quantity}</td>
+      <td>${m.min_level}</td>
+      <td>${fm(m.purchase_price)}</td>
+      <td style="font-weight:600">${fm(totalVal)}</td>
+      <td><span class="badge badge-${st==='critical'?'critical':st==='low'?'low':'ok'}">${lb}</span></td>
+      <td style="white-space:nowrap">
+        <button class="act" onclick="openMovement(${m.id},'income')" title="Приход">+</button>
+        <button class="act" onclick="openMovement(${m.id},'expense')" title="Расход">−</button>
+        <button class="act" onclick="delMat(${m.id})" title="Удалить">✕</button>
+      </td>
+    </tr>`
+  }).join('');
 }
 
 /* ========== CLIENTS ========== */
-async function renderClients() {
-  const grid = document.getElementById('clientsGrid');
-  const searchQ = (document.getElementById('clientSearch').value||'').trim().toLowerCase();
-  const dirF = document.getElementById('clientDirFilter').value;
-  const all = allOrdersCache.length ? allOrdersCache : await DB.orders();
-  const colors = ['#6c5ce7','#3b82f6','#28c76f','#f59e0b','#ef4444','#f97316'];
-  const map = {};
-  all.forEach(o => {
-    const name = (o.client||'').trim();
-    if (!name || name.length<2) return;
-    if (dirF !== 'all' && o.direction !== dirF) return;
-    if (!map[name]) map[name] = { name, orders:[], phones:new Set(), debt:0 };
-    map[name].orders.push(o);
-    if (o.phone) map[name].phones.add(o.phone);
-    if (o.payment_status === 'unpaid') map[name].debt += Number(o.total_amount||0);
+async function renderClients(){
+  const sq=(document.getElementById('clSearch').value||'').trim().toLowerCase();
+  const dir=document.getElementById('clDir').value;
+  if(!allOrders.length)allOrders=await DB.orders();
+  const colors=['#6c5ce7','#3b82f6','#28c76f','#f59e0b','#ef4444','#f97316'];
+  const map={};
+  allOrders.forEach(o=>{
+    const n=(o.client||'').trim();
+    if(!n||n.length<2)return;
+    if(dir!='all'&&o.direction!==dir)return;
+    if(!map[n])map[n]={name:n,orders:[],phones:new Set(),rev:0,cost:0};
+    map[n].orders.push(o);
+    if(o.phone)map[n].phones.add(o.phone);
+    map[n].rev+=Number(o.total_amount||0);
+    map[n].cost+=Number(o.material_cost||0)+Number(o.delivery_cost||0);
   });
-  let clients = Object.values(map).sort((a,b) => b.orders.length - a.orders.length);
-  if (searchQ) clients = clients.filter(c => c.name.toLowerCase().includes(searchQ));
-  grid.innerHTML = '';
-  clients.forEach((c,i) => {
-    const totalAmt = c.orders.reduce((s,o) => s + Number(o.total_amount||0), 0);
-    const doneCount = c.orders.filter(o => ['done','completed'].includes(o.status)).length;
-    const color = colors[i%colors.length];
-    const card = document.createElement('div');
-    card.className = 'client-card';
-    card.innerHTML = `<div class="client-header"><div class="client-avatar" style="background:${color}22;color:${color}">${c.name[0]}</div><div><div class="client-name">${esc(c.name)}</div><div class="client-phone">${[...c.phones][0]||''}</div><div class="client-debt ${c.debt>0?'positive':'zero'}">${c.debt>0?'Долг: '+fmtMoney(c.debt):'Долгов нет'}</div></div></div><div class="client-stats"><div class="client-stat"><div class="client-stat-value green">${c.orders.length}</div><div class="client-stat-label">Заказов</div></div><div class="client-stat"><div class="client-stat-value blue">${fmtMoney(totalAmt)}</div><div class="client-stat-label">Сумма</div></div><div class="client-stat"><div class="client-stat-value yellow">${doneCount}</div><div class="client-stat-label">Выполнено</div></div></div>`;
-    grid.appendChild(card);
-  });
+  let clients=Object.values(map).sort((a,b)=>b.orders.length-a.orders.length);
+  if(sq)clients=clients.filter(c=>c.name.toLowerCase().includes(sq));
+  const g=document.getElementById('clientsGrid');
+  g.innerHTML=clients.map((c,i)=>{
+    const profit=c.rev-c.cost;
+    const status=c.rev>100000?'VIP':c.orders.length>=5?'Постоянный':'Новый';
+    const color=colors[i%colors.length];
+    return `<div class="client-card">
+      <div class="ch"><div class="ca" style="background:${color}22;color:${color}">${c.name[0]}</div>
+      <div><div class="cn">${esc(c.name)}</div><div class="cp">${[...c.phones][0]||''}</div><div style="font-size:11px;margin-top:2px"><span class="badge" style="background:${status==='VIP'?'rgba(245,158,11,.15)':status==='Постоянный'?'rgba(40,199,111,.15)':'rgba(108,92,231,.15)'};color:${status==='VIP'?'var(--yellow)':status==='Постоянный'?'var(--green)':'var(--primary)'}">${status}</span></div></div></div>
+      <div class="cs"><div><div class="v">${c.orders.length}</div><div class="l">Заказов</div></div><div><div class="v" style="color:var(--green)">${fm(c.rev)}</div><div class="l">LTV</div></div><div><div class="v" style="color:${profit>=0?'var(--green)':'var(--danger)'}">${fm(profit)}</div><div class="l">Прибыль</div></div></div>
+    </div>`
+  }).join('');
 }
 
-/* ========== MATERIALS ========== */
-async function renderMaterials() {
-  const body = document.getElementById('materialsBody');
-  const mats = await DB.materials();
-  body.innerHTML = '';
-  let normal=0, low=0, critical=0;
-  mats.forEach(m => {
-    const st = m.quantity >= m.min_level*2 ? 'ok' : m.quantity >= m.min_level ? 'low' : 'critical';
-    if (st === 'ok') normal++; else if (st === 'low') low++; else critical++;
-  });
-  document.getElementById('matTotal').textContent = mats.length;
-  document.getElementById('matNormal').textContent = normal;
-  document.getElementById('matLow').textContent = low;
-  document.getElementById('matCritical').textContent = critical;
-  mats.forEach(m => {
-    const st = m.quantity >= m.min_level*2 ? 'ok' : m.quantity >= m.min_level ? 'low' : 'critical';
-    const label = m.quantity >= m.min_level*2 ? 'Норма' : m.quantity >= m.min_level ? 'Мало' : 'Критично';
-    const color = st === 'ok' ? 'var(--green)' : st === 'low' ? 'var(--yellow)' : 'var(--danger)';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td><span class="material-name" onclick="editMaterial(${m.id})">${esc(m.name)}</span></td>
-      <td><span class="material-tag ${m.direction}">${dirLabel(m.direction)}</span></td>
-      <td style="color:${color};font-weight:600">${m.quantity} ${m.unit}</td>
-      <td>${m.min_level} ${m.unit}</td>
-      <td>${fmtMoney(m.purchase_price)}</td>
-      <td style="white-space:nowrap">
-        <button class="action-btn" onclick="openMovementModal(${m.id},'income')" title="Приход">+</button>
-        <button class="action-btn" onclick="openMovementModal(${m.id},'expense')" title="Расход">−</button>
-        <button class="action-btn" onclick="deleteMaterial(${m.id})" title="Удалить">✕</button>
-      </td>`;
-    body.appendChild(tr);
-  });
+/* ========== TEMPLATES ========== */
+async function renderTemplates(){
+  const g=document.getElementById('tplGrid');
+  allTpls=await DB.getTemplates();
+  g.innerHTML=allTpls.map(t=>`<div class="tpl-card">
+    <div class="th"><span class="tn">${esc(t.name)}</span><span class="badge badge-${t.direction}">${dl(t.direction)}</span></div>
+    <div class="td">${esc(t.description||'')}</div>
+    <div class="ta">${fm(t.amount)}</div>
+    <div class="taf">
+      <button class="btn btn-ghost btn-sm" onclick="useTpl(${t.id})">Использовать</button>
+      <button class="btn btn-ghost btn-sm" onclick="editTpl(${t.id})">Ред.</button>
+      <button class="btn btn-sm" style="background:var(--danger);color:#fff" onclick="delTpl(${t.id})">Удал.</button>
+    </div>
+  </div>`).join('');
 }
-function openMaterialModal(id) {
+
+async function openTemplateModal(id){
+  document.getElementById('templateModal').classList.add('open');
+  document.getElementById('tEditId').value=id||'';
+  tplMatRows=[];
+  if(id){
+    const{data:t}=await sb.from('templates').select('*').eq('id',id).single();
+    if(!t)return;
+    document.getElementById('tmTitle').textContent='Редактировать шаблон';
+    document.getElementById('tName').value=t.name;
+    document.getElementById('tDir').value=t.direction;
+    document.getElementById('tAmount').value=t.amount;
+    document.getElementById('tDesc').value=t.description||'';
+    try{
+      const{data:mats}=await sb.from('template_materials').select('*').eq('template_id',id);
+      if(mats&&mats.length)tplMatRows=mats.map(m=>({name:m.name,unit:m.unit||'шт',price:m.price,perRun:m.per_run||1}));
+      else if(t.description&&t.description.startsWith('['))tplMatRows=JSON.parse(t.description);
+    }catch(e){}
+  }else{
+    document.getElementById('tmTitle').textContent='Новый шаблон';
+    ['tName','tAmount','tDesc'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('tDir').value='tipografia';
+  }
+  renderTplMats();
+}
+function closeTemplateModal(){document.getElementById('templateModal').classList.remove('open')}
+function addTplMat(){tplMatRows.push({name:'',unit:'шт',price:0,perRun:1});renderTplMats()}
+function renderTplMats(){
+  document.getElementById('tplMats').innerHTML=tplMatRows.map((m,i)=>`<div class="mat-row">
+    <input style="width:100px" value="${esc(m.name)}" onchange="tplMatRows[${i}].name=this.value" placeholder="Материал">
+    <input style="width:40px" value="${m.price}" onchange="tplMatRows[${i}].price=Number(this.value)" placeholder="0">
+    <span style="font-size:11px;color:var(--text-dim)">₸/</span>
+    <input style="width:36px" value="${m.unit}" onchange="tplMatRows[${i}].unit=this.value" placeholder="шт">
+    <span style="font-size:11px;color:var(--text-dim)">×</span>
+    <input style="width:40px" value="${m.perRun}" onchange="tplMatRows[${i}].perRun=Number(this.value)" placeholder="1">
+    <span style="font-size:11px;color:var(--text-dim)">на ед.</span>
+    <button class="act" onclick="tplMatRows.splice(${i},1);renderTplMats()">✕</button>
+  </div>`).join('');
+}
+async function saveTemplate(){
+  const id=parseInt(document.getElementById('tEditId').value);
+  const name=document.getElementById('tName').value.trim();
+  if(!name){alert('Введите название');return}
+  const data={name,direction:document.getElementById('tDir').value,amount:parseFloat(document.getElementById('tAmount').value)||0,description:document.getElementById('tDesc').value.trim()||''};
+  if(id){
+    await DB.updateTemplate(id,data);
+    if(tplMatRows.length){
+      try{
+        await sb.from('template_materials').delete().eq('template_id',id);
+        await sb.from('template_materials').insert(tplMatRows.map(m=>({template_id:id,name:m.name,unit:m.unit,price:m.price,per_run:m.perRun})));
+      }catch(e){}
+    }
+    await DB.logAudit('edit',name,'Изменён шаблон #'+id);
+  }else{
+    const c=await DB.createTemplate(data);
+    if(c&&tplMatRows.length){
+      try{await sb.from('template_materials').insert(tplMatRows.map(m=>({template_id:c.id,name:m.name,unit:m.unit,price:m.price,per_run:m.perRun})))}catch(e){}
+    }
+    if(c)await DB.logAudit('create',name,'Создан шаблон #'+c.id);
+  }
+  closeTemplateModal();renderTemplates();
+}
+async function useTpl(id){
+  const t=allTpls.find(x=>x.id===id);
+  if(!t)return;
+  document.querySelector('.nav-item[data-page="orders"]').click();
+  openOrderModal();
+  document.getElementById('fTpl').value=id;
+  await applyTemplate();
+}
+function editTpl(id){openTemplateModal(id)}
+async function delTpl(id){
+  if(!confirm('Удалить шаблон?'))return;
+  const{data:t}=await sb.from('templates').select('name').eq('id',id).single();
+  await DB.deleteTemplate(id);
+  if(t)await DB.logAudit('delete',t.name,'Удалён шаблон #'+id);
+  renderTemplates();
+}
+
+/* ========== ORDER MODAL ========== */
+async function openOrderModal(id){
+  document.getElementById('orderModal').classList.add('open');
+  document.getElementById('omTitle').textContent=id?'Редактировать заказ':'Новый заказ';
+  document.getElementById('omSave').textContent=id?'Сохранить':'Создать заказ';
+  document.getElementById('fEditId').value=id||'';
+  document.getElementById('calcSection').style.display='none';
+  ['fClient','fPhone','fAmount','fDelivery','fCostManual','fMatData'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fDesc').value='';
+  document.getElementById('fDir').value='tipografia';
+  document.getElementById('fPay').value='unpaid';
+  document.getElementById('fCol').value='incoming';
+  document.getElementById('fDeadline').value='';
+  if(id){
+    const{data:o}=await sb.from('orders').select('*').eq('id',id).single();
+    if(o){
+      document.getElementById('fClient').value=o.client;
+      document.getElementById('fPhone').value=o.phone||'';
+      document.getElementById('fDesc').value=o.description||'';
+      document.getElementById('fDir').value=o.direction;
+      document.getElementById('fAmount').value=o.total_amount;
+      document.getElementById('fDelivery').value=o.delivery_cost||'';
+      document.getElementById('fCostManual').value=(Number(o.material_cost||0)+Number(o.delivery_cost||0))||'';
+      document.getElementById('fPay').value=o.payment_status;
+      document.getElementById('fCol').value=o.status;
+      document.getElementById('fDeadline').value=o.deadline||'';
+    }
+  }
+  allTpls=await DB.getTemplates();
+  const sel=document.getElementById('fTpl');
+  sel.innerHTML='<option value="">— Без шаблона —</option>';
+  allTpls.forEach(t=>sel.innerHTML+=`<option value="${t.id}">${esc(t.name)}</option>`);
+}
+
+function closeOrderModal(){document.getElementById('orderModal').classList.remove('open')}
+
+async function applyTemplate(){
+  const id=parseInt(document.getElementById('fTpl').value);
+  const sec=document.getElementById('calcSection');
+  if(!id){sec.style.display='none';return}
+  sec.style.display='block';
+  const tpl=allTpls.find(t=>t.id===id);
+  if(!tpl)return;
+  let mats=[];
+  try{
+    const{data:tm}=await sb.from('template_materials').select('*').eq('template_id',id);
+    if(tm&&tm.length)mats=tm;
+  }catch(e){}
+  if(!mats.length&&tpl.description&&tpl.description.startsWith('[')){try{mats=JSON.parse(tpl.description)}catch(e){}}
+  const list=document.getElementById('calcMatsList');
+  if(mats.length){
+    list.innerHTML=mats.map(m=>`<div class="mat-row"><span class="mn">${esc(m.name)}</span><span style="color:var(--text-dim)">${m.price} ₸/${m.unit||'шт'}</span><span style="color:var(--text-dim)">× ${m.perRun||1} на ед.</span></div>`).join('');
+    // Check warehouse availability
+    if(allMats.length){
+      const warn=[];
+      mats.forEach(m=>{
+        const w=allMats.find(x=>x.name.toLowerCase()===m.name.toLowerCase());
+        if(w&&w.quantity<m.perRun)warn.push(`${m.name}: нужно ${m.perRun}, в наличии ${w.quantity} ${w.unit}`);
+      });
+      if(warn.length)list.innerHTML+=`<div style="margin-top:6px;font-size:11px;color:var(--danger)">⚠️ ${warn.join('; ')}</div>`;
+    }
+    document.getElementById('fMatData').value=JSON.stringify(mats);
+  }else{
+    list.innerHTML='<div style="font-size:12px;color:var(--text-dim)">Нет материалов</div>';
+    document.getElementById('fMatData').value='[]';
+  }
+  document.getElementById('fDir').value=tpl.direction;
+  document.getElementById('fAmount').value=tpl.amount||'';
+  document.getElementById('fQty').value=1;
+  document.getElementById('fMarkup').value=30;
+  recalc();
+}
+
+function recalc(){
+  const raw=document.getElementById('fMatData').value;
+  const mats=raw?JSON.parse(raw):[];
+  const qty=parseInt(document.getElementById('fQty').value)||1;
+  const markup=parseInt(document.getElementById('fMarkup').value)||30;
+  let tc=0;
+  mats.forEach(m=>{tc+=(Number(m.price||0)*Number(m.perRun||1))*qty});
+  const rp=tc*(1+markup/100);
+  document.getElementById('cCost').textContent=fm(tc);
+  document.getElementById('cPrice').textContent=fm(rp);
+  document.getElementById('cProfit').textContent=fm(rp-tc);
+  document.getElementById('fCostManual').value=tc;
+  if(!document.getElementById('fEditId').value)document.getElementById('fAmount').value=Math.round(rp);
+}
+
+function onAmountEdit(){}
+
+async function saveOrder(){
+  const id=parseInt(document.getElementById('fEditId').value);
+  const client=document.getElementById('fClient').value.trim();
+  if(!client){alert('Введите клиента');return}
+  const amount=parseFloat(document.getElementById('fAmount').value)||0;
+  const fmc=parseFloat(document.getElementById('fCostManual').value)||0;
+  const deliv=parseFloat(document.getElementById('fDelivery').value)||0;
+  const matCost=Math.max(0,fmc-deliv);
+  const data={
+    client,phone:document.getElementById('fPhone').value.trim()||null,
+    description:document.getElementById('fDesc').value.trim()||null,
+    direction:document.getElementById('fDir').value,
+    total_amount:amount,material_cost:matCost,delivery_cost:deliv,
+    payment_status:document.getElementById('fPay').value,
+    status:document.getElementById('fCol').value,
+    deadline:document.getElementById('fDeadline').value||null,
+    date:new Date().toISOString().slice(0,10)
+  };
+
+  // Auto-deduct materials from warehouse
+  try{
+    const raw=document.getElementById('fMatData').value;
+    const mats=raw?JSON.parse(raw):[];
+    const qty=parseInt(document.getElementById('fQty').value)||1;
+    if(mats.length){
+      allMats=await DB.getMaterials();
+      for(const m of mats){
+        const w=allMats.find(x=>x.name.toLowerCase()===m.name.toLowerCase());
+        if(w){
+          const deduct=Number(m.perRun||1)*qty;
+          const newQty=Math.max(0,w.quantity-deduct);
+          await sb.from('materials').update({quantity:newQty}).eq('id',w.id);
+        }
+      }
+    }
+  }catch(e){console.error('Auto-deduct error:',e);}
+
+  if(id){
+    await DB.updateOrder(id,data);
+    await DB.logAudit('edit',data.client,'Изменён заказ #'+id);
+  }else{
+    const c=await DB.createOrder(data);
+    if(c)await DB.logAudit('create',data.client,'Создан заказ #'+c.id);
+  }
+  closeOrderModal();
+  allOrders=await DB.orders();
+  renderOrders();
+}
+
+/* ========== DETAIL ========== */
+async function openDetail(id){
+  window._detId=id;
+  document.getElementById('detailModal').classList.add('open');
+  document.getElementById('dmTitle').textContent='Заказ #'+id;
+  const{data:o}=await sb.from('orders').select('*').eq('id',id).single();
+  if(!o)return;
+  document.getElementById('dClient').textContent=o.client;
+  document.getElementById('dPhone').textContent=o.phone||'—';
+  document.getElementById('dDir').innerHTML='<span class="badge badge-'+o.direction+'">'+dl(o.direction)+'</span>';
+  document.getElementById('dAmount').textContent=fm(o.total_amount);
+  const pe=document.getElementById('dPay');
+  pe.textContent=pl(o.payment_status);
+  pe.style.color=o.payment_status==='paid'?'var(--green)':o.payment_status==='unpaid'?'var(--danger)':'var(--yellow)';
+  document.getElementById('dStatus').textContent=cl(o.status);
+  document.getElementById('dDate').textContent=fd(o.date)||'—';
+  document.getElementById('dDeadline').textContent=o.deadline?fd(o.deadline):'—';
+  const cst=Number(o.material_cost||0)+Number(o.delivery_cost||0);
+  const prf=Number(o.total_amount||0)-cst;
+  document.getElementById('dCost').textContent=fm(cst);
+  const prEl=document.getElementById('dProfit');
+  prEl.textContent=fm(prf);
+  prEl.style.color=prf>=0?'var(--green)':'var(--danger)';
+  document.getElementById('dDesc').textContent=o.description||'—';
+  const{data:logs}=await sb.from('audit_log').select('*').ilike('detail','%#'+id+'%').order('created_at',{ascending:false}).limit(20);
+  const h=document.getElementById('dHistory');
+  if(logs&&logs.length)h.innerHTML=logs.map(l=>`<div style="display:flex;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);align-items:flex-start"><span style="font-size:10px;color:var(--text-dim);white-space:nowrap">${fdt(l.created_at)}</span><span>${esc(l.detail)}</span></div>`).join('');
+  else h.innerHTML='<div>Нет истории</div>';
+}
+function closeDetailModal(){document.getElementById('detailModal').classList.remove('open')}
+function editFromDetail(){closeDetailModal();openOrderModal(window._detId)}
+
+/* ========== MATERIALS CRUD ========== */
+function openMaterialModal(id){
   document.getElementById('materialModal').classList.add('open');
-  document.getElementById('matEditId').value = id||'';
-  if (id) {
-    sb.from('materials').select('*').eq('id',id).single().then(({data:m}) => {
-      if(!m) return;
-      document.getElementById('matModalTitle').textContent = 'Редактировать материал';
-      document.getElementById('matName').value = m.name;
-      document.getElementById('matDirection').value = m.direction;
-      document.getElementById('matUnit').value = m.unit||'';
-      document.getElementById('matQty').value = m.quantity;
-      document.getElementById('matMin').value = m.min_level;
-      document.getElementById('matPrice').value = m.purchase_price;
+  document.getElementById('mEditId').value=id||'';
+  if(id){
+    sb.from('materials').select('*').eq('id',id).single().then(({data:m})=>{
+      if(!m)return;
+      document.getElementById('mmTitle').textContent='Редактировать материал';
+      document.getElementById('mName').value=m.name;
+      document.getElementById('mCat').value=m.category||'Прочее';
+      document.getElementById('mUnit').value=m.unit||'';
+      document.getElementById('mDir').value=m.direction;
+      document.getElementById('mQty').value=m.quantity;
+      document.getElementById('mMin').value=m.min_level;
+      document.getElementById('mPrice').value=m.purchase_price;
     });
-  } else {
-    document.getElementById('matModalTitle').textContent = 'Новый материал';
-    ['matName','matUnit','matQty','matMin','matPrice'].forEach(id => document.getElementById(id).value='');
-    document.getElementById('matDirection').value = 'tipografia';
+  }else{
+    document.getElementById('mmTitle').textContent='Новый материал';
+    ['mName','mUnit','mQty','mMin','mPrice'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('mCat').value='Прочее';
+    document.getElementById('mDir').value='tipografia';
   }
 }
-function closeMaterialModal() { document.getElementById('materialModal').classList.remove('open'); }
-async function saveMaterial() {
-  const id = parseInt(document.getElementById('matEditId').value);
-  const name = document.getElementById('matName').value.trim();
-  if (!name) { alert('Введите название'); return; }
-  const data = { name, direction: document.getElementById('matDirection').value, unit: document.getElementById('matUnit').value.trim()||'шт', quantity: parseFloat(document.getElementById('matQty').value)||0, min_level: parseFloat(document.getElementById('matMin').value)||0, purchase_price: parseFloat(document.getElementById('matPrice').value)||0 };
-  if (id) { await sb.from('materials').update(data).eq('id',id); }
-  else { await sb.from('materials').insert(data); }
-  closeMaterialModal(); await renderMaterials();
+function closeMaterialModal(){document.getElementById('materialModal').classList.remove('open')}
+async function saveMaterial(){
+  const id=parseInt(document.getElementById('mEditId').value);
+  const name=document.getElementById('mName').value.trim();
+  if(!name){alert('Введите название');return}
+  const data={name,category:document.getElementById('mCat').value,direction:document.getElementById('mDir').value,unit:document.getElementById('mUnit').value.trim()||'шт',quantity:parseFloat(document.getElementById('mQty').value)||0,min_level:parseFloat(document.getElementById('mMin').value)||0,purchase_price:parseFloat(document.getElementById('mPrice').value)||0};
+  if(id)await sb.from('materials').update(data).eq('id',id);
+  else await sb.from('materials').insert(data);
+  closeMaterialModal();renderWarehouse();
 }
-function editMaterial(id) { openMaterialModal(id); }
-async function deleteMaterial(id) { if (!confirm('Удалить материал?')) return; await sb.from('materials').delete().eq('id',id); await renderMaterials(); }
-function openMovementModal(mid, type) {
+function delMat(id){if(!confirm('Удалить материал?'))return;sb.from('materials').delete().eq('id',id).then(()=>renderWarehouse())}
+function openMovement(mid,type){
   document.getElementById('movementModal').classList.add('open');
-  document.getElementById('movMaterialId').value = mid;
-  document.getElementById('movType').value = type;
-  document.getElementById('movQty').value = '';
-  sb.from('materials').select('name,quantity,unit').eq('id',mid).single().then(({data:m}) => { if(m) document.getElementById('movMaterialName').textContent = `${m.name} (сейчас: ${m.quantity} ${m.unit})`; });
+  document.getElementById('movId').value=mid;
+  document.getElementById('movType').value=type;
+  document.getElementById('movQty').value='';
+  sb.from('materials').select('name,quantity,unit').eq('id',mid).single().then(({data:m})=>{if(m)document.getElementById('movName').textContent=m.name+' (сейчас: '+m.quantity+' '+m.unit+')'});
 }
-function closeMovementModal() { document.getElementById('movementModal').classList.remove('open'); }
-async function saveMovement() {
-  const id = parseInt(document.getElementById('movMaterialId').value);
-  const type = document.getElementById('movType').value;
-  const qty = parseFloat(document.getElementById('movQty').value);
-  if (!qty||qty<=0) { alert('Введите количество'); return; }
-  const { data: m } = await sb.from('materials').select('*').eq('id',id).single();
-  if (!m) return;
-  const newQty = type === 'income' ? m.quantity+qty : m.quantity-qty;
-  if (newQty < 0) { alert('Недостаточно!'); return; }
-  await sb.from('materials').update({quantity:newQty}).eq('id',id);
-  closeMovementModal(); await renderMaterials();
-}
-
-/* ========== ARCHIVE ========== */
-async function renderArchive() {
-  const body = document.getElementById('archiveBody');
-  const trashed = await DB.trashed();
-  body.innerHTML = trashed.length ? trashed.map(t => `<tr>
-    <td>#${t.id}</td><td>${esc(t.client)}</td><td style="font-size:12px;color:var(--text-dim)">${esc(t.description||'')}</td>
-    <td>${fmtMoney(t.total_amount)}</td><td><span class="badge badge-${t.direction}">${dirLabel(t.direction)}</span></td>
-    <td style="font-size:12px">${fmtDate(t.deleted_at)}</td>
-    <td><button class="btn btn-ghost btn-sm" onclick="restoreOrder(${t.id})">Восстановить</button></td>
-  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-dim)">Корзина пуста</td></tr>';
-}
-async function restoreOrder(id) {
-  await DB.restoreOrder(id);
-  await DB.logAudit('restore','Заказ #'+id,`Восстановлен заказ #${id}`);
-  renderArchive();
-}
-
-/* ========== HISTORY ========== */
-async function renderHistory() {
-  const list = document.getElementById('historyList');
-  const log = await DB.getAuditLog();
-  const iconChar = { create:'+', edit:'✎', delete:'✕', restore:'↩' };
-  list.innerHTML = log.map(e => `<div class="history-item"><div class="history-icon ${e.type}">${iconChar[e.type]||'?'}</div><div class="history-content"><div class="history-event"><strong>${esc(e.subject)}</strong> — ${esc(e.detail||'')}</div><div class="history-time">${fmtDateTime(e.created_at)}</div></div></div>`).join('');
+function closeMovementModal(){document.getElementById('movementModal').classList.remove('open')}
+async function saveMovement(){
+  const id=parseInt(document.getElementById('movId').value);
+  const type=document.getElementById('movType').value;
+  const qty=parseFloat(document.getElementById('movQty').value);
+  if(!qty||qty<=0){alert('Введите количество');return}
+  const{data:m}=await sb.from('materials').select('*').eq('id',id).single();
+  if(!m)return;
+  const nq=type==='income'?m.quantity+qty:m.quantity-qty;
+  if(nq<0){alert('Недостаточно!');return}
+  await sb.from('materials').update({quantity:nq}).eq('id',id);
+  closeMovementModal();renderWarehouse();
 }
 
 /* ========== EXCEL ========== */
-async function exportExcel() {
-  if (typeof XLSX === 'undefined') { alert('XLSX не загружена'); return; }
-  const all = await DB.orders();
-  const data = all.map(o => ({
-    'ID':o.id,'Клиент':o.client,'Телефон':o.phone||'','Направление':dirLabel(o.direction),
-    'Описание':o.description||'','Выручка':Number(o.total_amount||0),
+async function exportExcel(){
+  if(typeof XLSX==='undefined'){alert('XLSX не загружена');return}
+  const all=await DB.orders();
+  const data=all.map(o=>({
+    'ID':o.id,'Дата':o.date||'','Клиент':o.client,'Телефон':o.phone||'',
+    'Направление':dl(o.direction),'Оплата':pl(o.payment_status),
+    'Выручка':Number(o.total_amount||0),
     'Себестоимость':Number(o.material_cost||0)+Number(o.delivery_cost||0),
     'Прибыль':Number(o.total_amount||0)-Number(o.material_cost||0)-Number(o.delivery_cost||0),
-    'Статус':columnLabel(o.status),'Оплата':statusLabel(o.payment_status),
-    'Дата':o.date||'','Дедлайн':o.deadline||''
+    'Статус':cl(o.status),'Дедлайн':o.deadline||'','Описание':o.description||''
   }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Заказы');
-  ws['!cols'] = [{wch:6},{wch:18},{wch:14},{wch:12},{wch:30},{wch:10},{wch:12},{wch:12},{wch:10},{wch:10},{wch:12},{wch:12}];
-  XLSX.writeFile(wb, `orders_${new Date().toISOString().slice(0,10)}.xlsx`);
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Заказы');
+  ws['!cols']=[{wch:6},{wch:12},{wch:20},{wch:16},{wch:14},{wch:12},{wch:12},{wch:14},{wch:12},{wch:10},{wch:12},{wch:30}];
+  XLSX.writeFile(wb,'orders_report_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
-async function importExcel(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
-      const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
-      let imported = 0;
-      for (const row of json) {
-        const client = row['Клиент']||row['client']||'';
-        const desc = row['Описание']||row['desc']||row['Заказ']||'';
-        const amt = parseFloat(row['Сумма']||row['amount']||0)||0;
-        const rawDir = row['Направление']||row['dir']||'tipografia';
-        const dir = rawDir.toString().toLowerCase().includes('пром')?'promotion':rawDir.toString().toLowerCase().includes('рем')?'repair':'tipografia';
-        const date = row['Дата']||row['date']||new Date().toISOString().slice(0,10);
-        if (!client) continue;
-        const created = await DB.createOrder({ client, description:desc, total_amount:amt, direction:dir, date, payment_status:'unpaid', status:'incoming' });
-        if (created) imported++;
-      }
-      if (imported>0) { await DB.logAudit('create','Excel',`Импортировано ${imported} заказов`); alert(`Импортировано ${imported}`); await loadOrders(); }
-      else alert('Нет данных');
-    } catch(err) { alert('Ошибка: '+err.message); }
-  };
-  reader.readAsArrayBuffer(file);
-  event.target.value='';
+
+/* ========== FILTERS ========== */
+async function populateYearFilter(){
+  try{
+    const{data}=await sb.from('orders').select('date');
+    const y=new Set();
+    (data||[]).forEach(o=>{if(o.date&&o.date.length>=4)y.add(o.date.slice(0,4))});
+    const s=[...y].sort().reverse();
+    const sel=document.getElementById('fYear');
+    const cur=sel.value;
+    sel.innerHTML='<option value="all">Все года</option>';
+    s.forEach(y=>sel.innerHTML+=`<option value="${y}">${y}</option>`);
+    sel.value=cur;
+  }catch(e){}
+}
+
+function clearFilters(){
+  document.getElementById('fDir').value='all';
+  document.getElementById('fPay').value='all';
+  document.getElementById('fYear').value='all';
+  document.getElementById('fDateFrom').value='';
+  document.getElementById('fDateTo').value='';
+  document.getElementById('searchInput').value='';
+  renderOrders();
 }
 
 /* ========== INIT ========== */
-document.addEventListener('DOMContentLoaded', () => {
-  navigateTo('orders-page');
+document.addEventListener('DOMContentLoaded',async()=>{
+  allOrders=await DB.orders();
+  allMats=await DB.getMaterials();
+  await populateYearFilter();
+  renderOrders();
 });
 </script>
-
 </body>
 </html>
