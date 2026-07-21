@@ -173,7 +173,7 @@ tr:hover td{background:var(--bg4)}
     <input class="login-input" type="email" id="loginEmail" placeholder="Email" autocomplete="email">
     <input class="login-input" type="password" id="loginPass" placeholder="Пароль" autocomplete="current-password">
     <button class="btn btn-primary login-btn" id="loginBtn" onclick="login()">Войти</button>
-    <div class="login-hint">Нет аккаунта? <a href="#" onclick="showSignup()">Создать</a></div>
+    <div class="login-hint" id="loginHint"></div>
   </div>
 </div>
 
@@ -509,21 +509,7 @@ async function logout(){
   checkAuth();
 }
 
-function showSignup(){
-  const email=document.getElementById('loginEmail').value.trim();
-  const pass=document.getElementById('loginPass').value;
-  if(!email||!pass){document.getElementById('loginError').textContent='Введите email и пароль';return}
-  document.getElementById('loginError').textContent='';
-  document.getElementById('loginBtn').disabled=true;
-  document.getElementById('loginBtn').textContent='Создание...';
-  sb.auth.signUp({ email, password: pass }).then(({ error })=>{
-    document.getElementById('loginBtn').disabled=false;
-    document.getElementById('loginBtn').textContent='Войти';
-    if(error){document.getElementById('loginError').textContent=error.message;return}
-    document.getElementById('loginError').textContent='Аккаунт создан! Проверьте почту для подтверждения.';
-    document.getElementById('loginError').style.color='var(--green)';
-  });
-}
+
 
 // Listen for auth state changes
 sb.auth.onAuthStateChange((event, s) => {
