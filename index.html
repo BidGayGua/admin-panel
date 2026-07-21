@@ -140,20 +140,6 @@ tr:hover td{background:var(--bg4)}
 .header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .header-row .hl{font-weight:700;font-size:16px}
 .header-row .hr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-/* Login */
-.login-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;align-items:center;justify-content:center}
-.login-overlay.open{display:flex}
-.login-box{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:32px;width:360px;max-width:92vw;text-align:center}
-.login-title{font-size:22px;font-weight:700;margin-bottom:4px}
-.login-sub{font-size:13px;color:var(--text-dim);margin-bottom:20px}
-.login-input{width:100%;background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:6px;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box}
-.login-input:focus{border-color:var(--primary)}
-.login-btn{width:100%;padding:10px;font-size:14px;justify-content:center;margin-top:4px}
-.login-error{font-size:12px;color:var(--danger);margin-bottom:8px;min-height:18px}
-.login-hint{font-size:12px;color:var(--text-dim);margin-top:12px}
-.login-hint a{color:var(--primary);cursor:pointer;text-decoration:none}
-.login-hint a:hover{text-decoration:underline}
-
 @media(max-width:768px){
 .sidebar{display:none}
 .cards{grid-template-columns:1fr 1fr}
@@ -163,22 +149,8 @@ tr:hover td{background:var(--bg4)}
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <svg viewBox="0 0 28 28" fill="none" style="width:40px;height:40px;margin-bottom:8px"><rect x="4" y="4" width="20" height="20" rx="5" stroke="#6c5ce7" stroke-width="2"/><path d="M10 14l3 3 5-6" stroke="#6c5ce7" stroke-width="2" stroke-linecap="round"/></svg>
-    <div class="login-title">Kaizen Admin</div>
-    <div class="login-sub">Войдите в панель управления</div>
-    <div id="loginError" class="login-error"></div>
-    <input class="login-input" type="email" id="loginEmail" placeholder="Email" autocomplete="email">
-    <input class="login-input" type="password" id="loginPass" placeholder="Пароль" autocomplete="current-password">
-    <button class="btn btn-primary login-btn" id="loginBtn" onclick="login()">Войти</button>
-    <div class="login-hint" id="loginHint"></div>
-  </div>
-</div>
-
 <!-- SIDEBAR -->
-<div class="sidebar" id="sidebar">
+<div class="sidebar">
   <div class="logo">
     <svg viewBox="0 0 28 28" fill="none"><rect x="4" y="4" width="20" height="20" rx="5" stroke="#6c5ce7" stroke-width="2"/><path d="M10 14l3 3 5-6" stroke="#6c5ce7" stroke-width="2" stroke-linecap="round"/></svg>
     <div class="logo-text">Kaizen Admin</div>
@@ -190,9 +162,8 @@ tr:hover td{background:var(--bg4)}
     <div class="nav-item" data-page="templates"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Шаблоны</div>
   </div>
   <div class="sidebar-footer">
-    <div class="avatar" id="userAvatar">В</div>
-    <div style="flex:1"><div class="user-name" id="userName">Валерий</div><div class="user-role" id="userEmail">admin@kaizen.kz</div></div>
-    <button class="act" onclick="logout()" title="Выйти">⏻</button>
+    <div class="avatar">В</div>
+    <div><div class="user-name">Валерий</div><div class="user-role">Владелец</div></div>
   </div>
 </div>
 
@@ -465,62 +436,7 @@ tr:hover td{background:var(--bg4)}
 /* ========== SUPABASE ========== */
 const SUPABASE_URL = 'https://vdtpdwjvqabhydoxbqqg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkdHBkd2p2cWFiaHlkb3hicXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ0MTU0OTAsImV4cCI6MjA5OTk5MTQ5MH0.Y8Q0ohBfCdRquOOclPampF3L0Gd1j8opdfYYyxMYz_w';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { autoRefreshToken: true, persistSession: true }
-});
-
-let session = null;
-
-async function checkAuth(){
-  const { data: { session: s } } = await sb.auth.getSession();
-  session = s;
-  if(session){
-    document.getElementById('loginOverlay').classList.remove('open');
-    document.getElementById('sidebar').style.display='flex';
-    document.querySelector('.main').style.display='flex';
-    const u=session.user;
-    document.getElementById('userEmail').textContent=u.email||'';
-    document.getElementById('userAvatar').textContent=(u.email||'A')[0].toUpperCase();
-    initApp();
-  }else{
-    document.getElementById('loginOverlay').classList.add('open');
-    document.getElementById('sidebar').style.display='none';
-    document.querySelector('.main').style.display='none';
-  }
-}
-
-async function login(){
-  const email=document.getElementById('loginEmail').value.trim();
-  const pass=document.getElementById('loginPass').value;
-  document.getElementById('loginError').textContent='';
-  document.getElementById('loginBtn').disabled=true;
-  document.getElementById('loginBtn').textContent='Вход...';
-  const { data, error } = await sb.auth.signInWithPassword({ email, pass });
-  document.getElementById('loginBtn').disabled=false;
-  document.getElementById('loginBtn').textContent='Войти';
-  if(error){document.getElementById('loginError').textContent=error.message;return}
-  session=data.session;
-  checkAuth();
-}
-
-async function logout(){
-  await sb.auth.signOut();
-  session=null;
-  checkAuth();
-}
-
-
-
-// Listen for auth state changes
-sb.auth.onAuthStateChange((event, s) => {
-  session = s;
-});
-
-// Enter key on password field triggers login
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
-  document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginPass').focus()});
-});
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const DIR = {tipografia:'Типография',promotion:'Промоушен',repair:'Ремонт / Заправка картриджей'};
 const PAY_ST = {paid:'Оплачено',unpaid:'Не оплачено',partial:'Частично'};
@@ -1149,16 +1065,14 @@ async function populateYearFilter(){
 }
 
 /* ========== INIT ========== */
-async function initApp(){
+document.addEventListener('DOMContentLoaded',async()=>{
   allOrders=await DB.orders();
   allMats=await DB.getMaterials();
   allClients=await DB.getClients();
   allTpls=await DB.getTemplates();
   await populateYearFilter();
   renderOrders();
-}
-
-document.addEventListener('DOMContentLoaded',()=>{checkAuth()});
+});
 </script>
 </body>
 </html>
